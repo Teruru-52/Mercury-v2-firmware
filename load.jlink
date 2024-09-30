@@ -1,0 +1,4 @@
+r
+loadfile ./build/Mercury-v2-firmware.bin
+r
+q

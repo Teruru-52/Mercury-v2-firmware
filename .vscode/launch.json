@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Cortex Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/${workspaceFolderBasename}.elf",
+            "request": "launch",
+            "preLaunchTask": "Mercury-v2 Build",
+            "type": "cortex-debug",
+            "showDevDebugOutput": "raw",
+            "armToolchainPath": "/opt/gcc-arm-none-eabi/bin",
+            "servertype": "jlink",
+            "serverpath": "JLinkGDBServerCLExe",
+            "device": "STM32F405RG",
+            "interface": "swd",
+            // "svdFile": "${workspaceRoot}/STM32F405.svd"
+        }
+    ]
+}

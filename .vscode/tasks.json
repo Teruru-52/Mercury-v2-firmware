@@ -1,0 +1,41 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Mercury-v2 Build",
+            "command": "make",
+            "args": [
+                "DEBUG=1",
+                "-j8",
+                "all",
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Flash program",
+            "command": "JLinkExe",
+            "args": [
+                "-device",
+                "STM32F405RG",
+                "-if",
+                "SWD",
+                "-speed",
+                "4000",
+                "-autoconnect",
+                "1",
+                "-CommanderScript",
+                "./load.jlink",
+            ],
+            "problemMatcher": [],
+            "group": "none"
+        }
+    ]
+}
