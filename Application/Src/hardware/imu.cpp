@@ -65,7 +65,7 @@ namespace hardware
         who_am_i = read_byte(SPI_WHO_AM_I); // read who am i
         // printf("who_am_i = 0x%x\r\n", who_am_i); // check who am i value
         HAL_Delay(10);
-        while (who_am_i != 0x70)
+        while (who_am_i != 0x12)
         {
             who_am_i = read_byte(SPI_WHO_AM_I);
             printf("who_am_i = 0x%x\r\n", who_am_i);

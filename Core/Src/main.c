@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
 #include "adc.h"
 #include "dma.h"
 #include "fatfs.h"
@@ -31,6 +30,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main_exec.h"
+#include "SEGGER_RTT.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,20 +56,18 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
 
@@ -100,74 +98,38 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
-  MX_TIM5_Init();
   MX_ADC2_Init();
-  MX_TIM8_Init();
   MX_TIM10_Init();
   MX_TIM11_Init();
   MX_SDIO_SD_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
-  MX_TIM9_Init();
   MX_USART6_UART_Init();
   MX_FATFS_Init();
   MX_TIM12_Init();
+  MX_TIM8_Init();
+  MX_TIM5_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
-  // SEGGER_RTT_Init();
+  SEGGER_RTT_Init();
   setbuf(stdout, NULL);
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_ALL);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+  HAL_TIMEx_PWMN_Start(&htim8, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
 
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 100);
-  HAL_Delay(50);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 0);
+  Startup();
 
-  // Write_GPIO(FAN_EN, GPIO_PIN_SET);
-  // __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 2000);
-  // HAL_Delay(2000);
-  // __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 0);
-
-  Write_GPIO(LED_FRONT_LEFT1, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_FRONT_LEFT2, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_FRONT_LEFT3, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_FRONT_RIGHT1, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_FRONT_RIGHT2, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_FRONT_RIGHT3, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_WHITE, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_RED, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
-  HAL_Delay(100);
-  Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
-  HAL_Delay(100);
-
-  Write_GPIO(LED_TALE_LEFT, GPIO_PIN_RESET);
-  Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_RESET);
-  init();
-
+  HAL_TIM_Base_Start_IT(&htim2);
   HAL_TIM_Base_Start_IT(&htim10);
   /* USER CODE END 2 */
-
-  /* Call init function for freertos objects (in cmsis_os2.c) */
-  MX_FREERTOS_Init();
-
-  /* Start scheduler */
-  osKernelStart();
-
-  /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -176,32 +138,43 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (Read_GPIO(USER_SW) == GPIO_PIN_SET)
+    {
+      Write_GPIO(LED_TALE_LEFT, GPIO_PIN_RESET);
+      Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_RESET);
+    }
+    else
+    {
+      Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
+      Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
+    }
+
+    StateProcess();
   }
   /* USER CODE END 3 */
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-   */
+  */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
@@ -212,8 +185,9 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
@@ -226,50 +200,56 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+int cnt1Hz = 0;
 int cnt1kHz = 0;
 /* USER CODE END 4 */
 
 /**
- * @brief  Period elapsed callback in non blocking mode
- * @note   This function is called  when TIM6 interrupt took place, inside
- * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
- * a global variable "uwTick" used as application time base.
- * @param  htim : TIM handle
- * @retval None
- */
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM6)
-  {
+  if (htim->Instance == TIM6) {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-  if (htim->Instance == TIM2) // interruption 1kHz
+  if (GetInterruptionFlag())
   {
-    update();
+    if (htim->Instance == TIM2) // interruption 1kHz
+    {
+      cnt1kHz = (cnt1kHz + 1) % 1000;
 
-    cnt1kHz = (cnt1kHz + 1) % 1000;
+      UpdateMovement();
 
-    if (cnt1kHz == 200) // interruption 200Hz
-      printLog();
+      if (cnt1kHz == 200) // interruption 200Hz
+        PrintLog();
 
-    if (cnt1kHz == 0) // interruption 1Hz
-      Toggle_GPIO(LED_WHITE);
-  }
-  else if (htim->Instance == TIM10) // interruption 84kHz
-  {
-    updateIR();
+      if (cnt1kHz == 0) // interruption 1Hz
+      {
+        cnt1Hz++;
+        Toggle_GPIO(LED_GREEN);
+      }
+    }
+    else if (htim->Instance == TIM10) // interruption 84kHz
+    {
+      UpdateIRSensor();
+    }
   }
   /* USER CODE END Callback 1 */
 }
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -281,14 +261,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */

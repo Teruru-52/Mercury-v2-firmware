@@ -16,7 +16,7 @@ namespace hardware
         coeff_pulse2vel = coeff_pulse2angle / sampling_period;
     }
 
-    void Encoder::update()
+    void Encoder::Update()
     {
         Update_L();
         Update_R();

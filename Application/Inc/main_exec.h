@@ -13,11 +13,21 @@ extern "C"
 #endif
 #include "main.h"
 
-    void init();
-    void update();
-    void updateIR();
+    void Startup();
+    void Init();
+    void UpdateUndercarriage();
+    void SetIRSensor();
+    void UpdateIRSensor();
+    void UpdateMovement();
+    void Notification();
+    bool GetInterruptionFlag();
+    void MazeSearch();
+    void TimeAttack();
+    void StateProcess();
+    void FlashMaze();
+    void LoadMaze();
 
-    void printLog();
+    void PrintLog();
 
 #ifdef __cplusplus
 };

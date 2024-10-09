@@ -37,7 +37,7 @@ extern "C" {
 #include <string.h>
 #include <math.h>
 
-#include "cmsis_os.h"
+// #include "cmsis_os.h"
 #include "adc.h"
 // #include "fatfs.h"
 #include "sdio.h"
@@ -86,8 +86,8 @@ void Error_Handler(void);
 #define LED6_GPIO_Port GPIOB
 #define SW_Pin GPIO_PIN_12
 #define SW_GPIO_Port GPIOB
-#define MOTOR_FAN_EN_Pin GPIO_PIN_13
-#define MOTOR_FAN_EN_GPIO_Port GPIOB
+#define MOTOR_FAN_PH_Pin GPIO_PIN_13
+#define MOTOR_FAN_PH_GPIO_Port GPIOB
 #define SDIO_SW_Pin GPIO_PIN_10
 #define SDIO_SW_GPIO_Port GPIOA
 #define LED7_Pin GPIO_PIN_11

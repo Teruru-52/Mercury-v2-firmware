@@ -7,6 +7,7 @@
 #define HARDWARE_IR_SENSOR_H_
 
 #include "main.h"
+#include "hardware/led.h"
 
 namespace hardware
 {
@@ -67,20 +68,20 @@ namespace hardware
     public:
         IRsensor(float ir_start_base, IR_Base *ir_is_wall);
 
-        void onIrLed();
-        void offIrLed();
+        void OnLed();
+        void OffLed();
 
         void UI_led_onoff(const IR_Value &ir_value);
         void UI_led_off();
         void PrintWalldata(const IR_Value &ir_value);
 
-        void startDMA();
+        void StartDMA();
         void UpdateLeftValue();
         void UpdateRightValue();
-        void update();
+        void SetIRSensorData();
         IR_Value GetIRSensorData() { return ir_value; };
         bool StartInitialize();
-        void printLog();
+        void PrintLog();
     };
 }
 #endif //  HARDWARE_IR_SENSOR_H_

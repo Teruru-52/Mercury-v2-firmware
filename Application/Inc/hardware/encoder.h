@@ -15,7 +15,7 @@ namespace hardware
     public:
         Encoder(float sampling_period);
 
-        void update();
+        void Update();
         void Reset();
         void Update_L();
         void Update_R();
