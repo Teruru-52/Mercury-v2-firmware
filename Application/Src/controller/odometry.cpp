@@ -60,7 +60,7 @@ namespace undercarriage
     pre_length = length;
   }
 
-  void Odometory::OutputLog()
+  void Odometory::  OutputLog()
   {
     printf("%.3f, %.3f, %.3f, %.3f\n", cur_pos.x, cur_pos.y, cur_pos.th, acc_x);
     // printf("%f, %f\n", cur.pos[2], cur.vel[1]);

@@ -11,6 +11,7 @@
 #include "hardware/led.h"
 #include "hardware/speaker.h"
 
+using SlalomType = trajectory::Slalom::SlalomType;
 using AccType = trajectory::Acceleration::AccType;
 
 Direction wallData = 0x0E;
@@ -19,10 +20,14 @@ IndexVec robotPos = IndexVec(0, 0);
 Agent::State prevState = Agent::State::IDLE;
 OperationList runSequence;
 
+int cnt1Hz;
 int16_t pulse_l;
 int16_t pulse_r;
 
-void Startup()
+int trj_mode = 1;
+int search_time = 0;
+
+void StartupProcess()
 {
     speaker.Beep(50);
 
@@ -47,7 +52,34 @@ void Startup()
     led.OffAll();
 }
 
-void Init()
+void UpdateUndercarriage()
+{
+    controller.UpdateOdometory();
+}
+
+void SetIRSensor()
+{
+    ir_sensors.SetIRSensorData();
+    ir_value = ir_sensors.GetIRSensorData();
+    controller.SetIRdata(ir_value);
+}
+
+void UpdateIRSensor()
+{
+    ir_sensors.UpdateLeftValue();
+    ir_sensors.UpdateRightValue();
+}
+
+void Notification()
+{
+    // state.interruption_ = State::not_interrupt;
+    speaker.Beep(20);
+    led.Flash();
+    speaker.Beep(20);
+    // state.interruption_ = State::interrupt;
+}
+
+void Initialize()
 {
     speaker.Beep(50);
 
@@ -55,54 +87,63 @@ void Init()
     switch (state.func_)
     {
     case State::func0: // start first searching (not load maze, SEARCHING_NOT_GOAL)
-        controller.SetTrajectoryMode(1);
+        trj_mode = 1;
+        controller.SetTrajectoryMode(trj_mode);
+        search_time = 120;
         state.mode_ = State::search;
         printf("mode: search0\n");
         break;
 
     case State::func1: // resume searching (load maze, SEARCHING_NOT_GOAL)
-        controller.SetTrajectoryMode(1);
-        LoadMaze();
-        agent.resumeAt(Agent::SEARCHING_NOT_GOAL, maze);
+        trj_mode = 2;
+        controller.SetTrajectoryMode(trj_mode);
+        search_time = 120;
         state.mode_ = State::search;
         printf("mode: search1\n");
         break;
 
     case State::func2: // run sequence (load maze, SEARCHING_REACHED_GOAL or BACK_TO_START or FINISHED)
-        controller.SetTrajectoryMode(1);
+        trj_mode = 1;
+        controller.SetTrajectoryMode(trj_mode);
+        LoadMaze();
+        agent.resumeAt(Agent::SEARCHING_NOT_GOAL, maze);
+        search_time = 60;
+        state.mode_ = State::search;
+        printf("mode: search2\n");
+        break;
+
+    case State::func3: // run sequence (load maze, SEARCHING_REACHED_GOAL or BACK_TO_START or FINISHED)
+        trj_mode = 3;
+        controller.SetTrajectoryMode(trj_mode);
         LoadMaze();
         agent.resumeAt(Agent::FINISHED, maze);
+        search_time = 30;
         agent.caclRunSequence(false);
         state.mode_ = State::run_sequence;
         printf("mode: run_sequence1\n");
         break;
 
-    case State::func3: // run sequence (load maze, SEARCHING_REACHED_GOAL or BACK_TO_START or FINISHED)
-        controller.SetTrajectoryMode(2);
+    case State::func4: // run sequence (load maze, SEARCHING_REACHED_GOAL or BACK_TO_START or FINISHED)
+        trj_mode = 4;
+        controller.SetTrajectoryMode(trj_mode);
         LoadMaze();
         agent.resumeAt(Agent::FINISHED, maze);
+        search_time = 20;
         agent.caclRunSequence(false);
         state.mode_ = State::run_sequence;
         printf("mode: run_sequence2\n");
         break;
 
-    case State::func4: // run sequence (load maze, SEARCHING_REACHED_GOAL or BACK_TO_START or FINISHED)
-        controller.SetTrajectoryMode(2);
+    case State::func5: // run sequence (load maze, SEARCHING_REACHED_GOAL or BACK_TO_START or FINISHED)
+        // __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 2000);
+        trj_mode = 5;
+        controller.SetTrajectoryMode(trj_mode);
         LoadMaze();
         agent.resumeAt(Agent::FINISHED, maze);
+        search_time = 10;
         agent.caclRunSequence(false);
         state.mode_ = State::run_sequence;
         printf("mode: run_sequence3\n");
-        break;
-
-    case State::func5: // run sequence (load maze, SEARCHING_REACHED_GOAL or BACK_TO_START or FINISHED)
-        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 2000);
-        controller.SetTrajectoryMode(2);
-        LoadMaze();
-        agent.resumeAt(Agent::FINISHED, maze);
-        agent.caclRunSequence(false);
-        state.mode_ = State::run_sequence;
-        printf("mode: run_sequence4\n");
         break;
 
     case State::func6:
@@ -133,13 +174,13 @@ void Init()
         break;
 
     case State::func11:
-        controller.SetTrajectoryMode(1);
+        controller.SetTrajectoryMode(3);
         state.mode_ = State::test_translation2;
         printf("mode: test_translation2\n");
         break;
 
     case State::func12:
-        controller.SetTrajectoryMode(1);
+        controller.SetTrajectoryMode(5);
         state.mode_ = State::test_translation1;
         printf("mode: test_translation1\n");
         break;
@@ -174,69 +215,14 @@ void Init()
     //     break;
     // }
 
+    speaker.Beep(20);
+    speaker.Beep(20);
     controller.InitializeOdometory();
+    speaker.Beep(20);
     controller.InitializeMotor();
+    speaker.Beep(20);
     agent.update(robotPos, wallData);
-    speaker.Beep(50);
     state.interruption_ = State::interrupt;
-}
-
-void UpdateUndercarriage()
-{
-    controller.UpdateOdometory();
-}
-
-void SetIRSensor()
-{
-    ir_sensors.SetIRSensorData();
-    ir_value = ir_sensors.GetIRSensorData();
-    controller.SetIRdata(ir_value);
-}
-
-void UpdateIRSensor()
-{
-    ir_sensors.UpdateLeftValue();
-    ir_sensors.UpdateRightValue();
-}
-
-void UpdateMovement()
-{
-    UpdateUndercarriage();
-    SetIRSensor();
-    controller.robotMove();
-
-    if (controller.ErrorFlag())
-    {
-        controller.Brake();
-        speaker.On();
-        state.mode_ = State::error;
-        state.interruption_ = State::not_interrupt;
-    }
-
-    // if (controller.GetMazeLoadFlag())
-    // {
-    //     state.interruption = State::not_interrupt;
-    //     FlashMaze();
-    //     controller.ResetMazeLoadFlag();
-    //     state.interruption = State::interrupt;
-    // }
-}
-
-void Notification()
-{
-    // state.interruption_ = State::not_interrupt;
-    speaker.On();
-    led.Flash();
-    speaker.Off();
-    // state.interruption_ = State::interrupt;
-}
-
-bool GetInterruptionFlag()
-{
-    if (state.interruption_ == State::interrupt)
-        return true;
-    else
-        return false;
 }
 
 void StateProcess()
@@ -251,7 +237,7 @@ void StateProcess()
         state.SelectFunction(pulse_r);
 
         if (ir_sensors.StartInitialize())
-            Init();
+            Initialize();
     }
 
     else
@@ -261,21 +247,21 @@ void StateProcess()
         case State::search: // func0, func1
             controller.StartMove();
             MazeSearch();
-            controller.InitializePosition();
+            controller.PivotTurn(180);
             state.interruption_ = State::not_interrupt;
             FlashMaze();
             Notification();
-            agent.caclRunSequence(false);
-            state.interruption_ = State::interrupt;
+            // agent.caclRunSequence(false);
+            // state.interruption_ = State::interrupt;
 
-            // state.mode_= State::select_function;
-            state.mode_ = State::run_sequence;
-            // state.log_= State::maze;
-            // state.mode_= State::output;
+            state.mode_ = State::select_function;
+            // state.mode_ = State::run_sequence;
             break;
 
         case State::State::run_sequence: // func2, func3, func4, func5
             TimeAttack();
+            // state.mode = State::select_function;
+            // state.mode = State::output;
             break;
 
         case State::m_identification: // func6
@@ -291,7 +277,8 @@ void StateProcess()
             break;
 
         case State::party_trick: // func8
-            controller.SetPartyTrick();
+            // controller.SetPartyTrick();
+            controller.FrontWallCorrection();
             break;
 
         case State::test_slalom2: // func9
@@ -302,7 +289,7 @@ void StateProcess()
             {
                 wallData = controller.getWallData();
                 controller.DirMove(WEST); // slalom
-                controller.Turn(90);
+                controller.Turn(SlalomType::left_90);
                 controller.GoStraight();
             }
             controller.Acceleration(AccType::stop);
@@ -311,31 +298,50 @@ void StateProcess()
             break;
 
         case State::test_slalom1: // func10
-            // controller.StartMove();
-            controller.Acceleration(AccType::start);
+            controller.StartMove();
+            // controller.Acceleration(AccType::start);
+            // controller.GoStraight();
+            HAL_Delay(100);
+            controller.Turn(SlalomType::left_90);
+            // controller.Turn(SlalomType::right_90);
+            // controller.Turn(SlalomType::right_90);
             controller.GoStraight();
-            // controller.Turn(-90);
-            controller.Turn(90);
-            // controller.Turn(-90);
-            // controller.Acceleration(AccType::stop);
-            // controller.FrontWallCorrection();
+            controller.Turn(SlalomType::left_90);
+            HAL_Delay(100);
+            controller.Turn(SlalomType::left_90);
+            // controller.GoStraight();
+            controller.Acceleration(AccType::stop);
+            controller.FrontWallCorrection();
             state.log_ = State::slalom;
             state.mode_ = State::output;
             break;
 
         case State::test_translation2: // func11
             controller.StartMove();
-            for (int i = 0; i < 14; i++)
-                controller.GoStraight();
+            for (int i = 0; i < 4; i++)
+            {
+                controller.Acceleration(AccType::forward, 1);
+                controller.Acceleration(AccType::stop);
+                controller.FrontWallCorrection();
+                controller.PivotTurn(-90);
+                controller.Acceleration(AccType::start_half);
+                controller.Acceleration(AccType::stop);
+                controller.FrontWallCorrection();
+                controller.PivotTurn(-90);
+                controller.Acceleration(AccType::start_half);
+                // controller.Turn(SlalomType::right_90);
+                // controller.Turn(SlalomType::right_90);
+            }
             controller.Acceleration(AccType::stop);
             state.log_ = State::translation;
             state.mode_ = State::output;
             break;
 
         case State::test_translation1: // func12
-            // controller.StartMove();
-            controller.Acceleration(AccType::start_half);
-            controller.GoStraight();
+            controller.StartMove();
+            // controller.Acceleration(AccType::start_half);
+            // controller.GoStraight();
+            controller.Acceleration(AccType::forward, 1);
             controller.Acceleration(AccType::stop);
             controller.Brake();
             state.log_ = State::translation;
@@ -343,10 +349,10 @@ void StateProcess()
             break;
 
         case State::test_rotation: // func13
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 12; i++)
                 controller.PivotTurn(90);
-            for (int i = 0; i < 4; i++)
-                controller.PivotTurn(180);
+            // for (int i = 0; i < 4; i++)
+            //     controller.PivotTurn(180);
             state.log_ = State::pivot_turn;
             state.mode_ = State::output;
             break;
@@ -375,13 +381,20 @@ void StateProcess()
                 {
                     for (int y = 0; y < MAZE_SIZE; y++)
                         for (int x = 0; x < MAZE_SIZE; x++)
+                        {
                             printf("maze.wall[%d][%d].byte = %d\n", y, x, maze.wall[y][x].byte);
+                            printf("maze_backup.wall[%d][%d].byte = %d\n", y, x, maze_backup.wall[y][x].byte);
+                        }
                 }
             }
             break;
 
         case State::error:
             state.interruption_ = State::not_interrupt;
+            speaker.Beep(20);
+            // if (state.mazeload == State::load)
+            //     FlashMaze();
+            speaker.Beep(20);
             state.mode_ = State::output;
             break;
 
@@ -389,6 +402,38 @@ void StateProcess()
             break;
         }
     }
+}
+
+void UpdateMovement()
+{
+    UpdateUndercarriage();
+    SetIRSensor();
+    controller.robotMove();
+
+    if (controller.ErrorFlag())
+    {
+        controller.Brake();
+        if (state.mode_ == State::search)
+            state.mazeload_ = State::load;
+        state.mode_ = State::error;
+        state.interruption_ = State::not_interrupt;
+    }
+
+    // if (controller.GetMazeLoadFlag())
+    // {
+    //     state.interruption = State::not_interrupt;
+    //     FlashMaze();
+    //     controller.ResetMazeLoadFlag();
+    //     state.interruption = State::interrupt;
+    // }
+}
+
+bool GetInterruptionFlag()
+{
+    if (state.interruption_ == State::interrupt)
+        return true;
+    else
+        return false;
 }
 
 void MazeSearch()
@@ -403,6 +448,7 @@ void MazeSearch()
                 break;
             }
         }
+        // controller.ResetWallFlag();
         ir_sensors.UI_led_onoff(controller.GetIRWall());
         // ir_sensors.PrintWalldata(controller.GetIRWall());
         controller.UpdateDir(nextDir);
@@ -412,45 +458,48 @@ void MazeSearch()
         agent.update(robotPos, wallData);
         if (agent.getState() == Agent::FINISHED)
         {
+            maze_backup = maze;
             controller.Acceleration(AccType::stop);
             break;
         }
-        if (agent.getState() == Agent::SEARCHING_REACHED_GOAL)
+        // else if (prevState == Agent::SEARCHING_NOT_GOAL && agent.getState() == Agent::SEARCHING_REACHED_GOAL)
+        else if (prevState == Agent::SEARCHING_NOT_GOAL && agent.getState() == Agent::BACK_TO_START)
         {
             // Write_GPIO(BACK_LEFT_LED, GPIO_PIN_SET);
+            maze_backup = maze;
         }
-        if (prevState == Agent::SEARCHING_NOT_GOAL && agent.getState() == Agent::BACK_TO_START)
-        // if (prevState == Agent::SEARCHING_NOT_GOAL && agent.getState() == Agent::SEARCHING_REACHED_GOAL)
+        else if (cnt1Hz > search_time && agent.getState() == Agent::SEARCHING_REACHED_GOAL)
         {
-            // Write_GPIO(BACK_LEFT_LED, GPIO_PIN_SET);
-            // maze_backup = maze;
+            agent.forceGotoStart();
         }
-        prevState = agent.getState();
-        // if (cnt1Hz > 210 && agent.getState() == Agent::SEARCHING_REACHED_GOAL)
-        // {
-        //     agent.forceGotoStart();
-        // }
         nextDir = agent.getNextDirection();
         // printf("nextDir.byte = %d\n", nextDir.byte);
         controller.DirMove(nextDir);
+        prevState = agent.getState();
     }
 }
 
 void TimeAttack()
 {
-    /**********************************
-     * 計測走行
-     *********************************/
-    // コマンドリストみたいなやつを取り出す
+    // get command list
+    // printf("getRunSequence\n");
     runSequence = agent.getRunSequence();
+    runSequence.print();
+    controller.CalcOpMovedState(runSequence);
+    robotPos = controller.getRobotPosition();
 
-    // // Operationを先頭から順番に実行していく
-    controller.Acceleration(AccType::start);
     for (size_t i = 0; i < runSequence.size(); i++)
         controller.OpMove(runSequence[i]);
     controller.Acceleration(AccType::stop);
+    controller.Brake();
+
+    // agent.resumeAt(Agent::SEARCHING_REACHED_GOAL, maze, robotPos);
+    // trj_mode = 1;
+    // controller.SetTrajectoryMode(trj_mode);
+    // cnt1Hz = 0;
+    // state.mode = State::search;
+    state.interruption_ = State::not_interrupt;
     state.mode_ = State::select_function;
-    // state.mode_= State::output;
 }
 
 void FlashMaze()
@@ -461,11 +510,13 @@ void FlashMaze()
 
     for (int y = 0; y < MAZE_SIZE; y++)
         for (int x = 0; x < MAZE_SIZE; x++)
-            flash_data[MAZE_SIZE * y + x] = maze.wall[y][x].byte;
+            flash_data[MAZE_SIZE * y + x] = maze_backup.wall[y][x].byte;
+    // flash_data[MAZE_SIZE * y + x] = maze.wall[y][x].byte;
 
-    if (!Flash_store())
-        while (1)
-            printf("Failed to write flash\n");
+    Flash_store();
+    // if (!Flash_store())
+    //     while (1)
+    //         printf("Failed to write flash\n");
 }
 
 void LoadMaze()

@@ -22,6 +22,7 @@ namespace hardware
         HAL_Delay(time_ms);
         // osDelay(time_ms);
         __HAL_TIM_SET_COMPARE(htim_, TIM_CHANNEL_, 0);
+        HAL_Delay(time_ms);
     }
 
     void Speaker::On()

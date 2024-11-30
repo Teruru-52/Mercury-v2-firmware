@@ -29,7 +29,7 @@ namespace undercarriage
             // ref_size = acc->GetRefSize();
             // ref_size = pivot_turn180.GetRefSize();
             // ref_size = pivot_turn90.GetRefSize();
-            ref_size = 900;
+            ref_size = 500;
 
             log_x = new float[ref_size];
             log_y = new float[ref_size];
@@ -91,6 +91,12 @@ namespace undercarriage
         case 3:
             ref_v = velocity->v3;
             break;
+        case 4:
+            ref_v = velocity->v4;
+            break;
+        case 5:
+            ref_v = velocity->v5;
+            break;
         default:
             break;
         }
@@ -140,9 +146,15 @@ namespace undercarriage
     void Controller::PivotTurn(int angle)
     {
         if (angle == 90)
+        {
             mode_ctrl = pivot_turn_left_90;
+            Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
+        }
         else if (angle == -90)
+        {
             mode_ctrl = pivot_turn_right_90;
+            Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
+        }
         else if (angle == 180)
             mode_ctrl = pivot_turn_180;
         ref_theta = static_cast<float>(angle) * M_PI / 180.0;
@@ -158,13 +170,33 @@ namespace undercarriage
                 break;
             }
         }
+        Write_GPIO(LED_TALE_LEFT, GPIO_PIN_RESET);
+        Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_RESET);
     }
 
-    void Controller::Turn(int angle)
+    void Controller::Turn(const SlalomType &slalom_type)
     {
-        angle_turn = angle;
-        ref_theta = static_cast<float>(angle) * M_PI / 180.0f;
-        slalom->ResetTrajectory(angle, ref_theta - theta_error, cur_pos);
+        this->slalom_type = slalom_type;
+        switch (slalom_type)
+        {
+        case SlalomType::left_90:
+            ref_theta = M_PI * 0.5f;
+            break;
+        case SlalomType::right_90:
+            ref_theta = -M_PI * 0.5f;
+            break;
+        case SlalomType::left_45:
+            ref_theta = M_PI * 0.25f;
+            break;
+        case SlalomType::right_45:
+            ref_theta = -M_PI * 0.25f;
+            break;
+        default:
+            ref_theta = 0.0;
+            break;
+        }
+        // slalom->ResetTrajectory(angle, ref_theta - theta_error, cur_pos);
+        slalom->ResetTrajectory(slalom_type, ref_theta, cur_pos);
         tracker->SetXi(cur_vel.x);
         mode_ctrl = turn;
 
@@ -179,12 +211,16 @@ namespace undercarriage
                 break;
             }
         }
+        Write_GPIO(LED_TALE_LEFT, GPIO_PIN_RESET);
+        Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_RESET);
     }
 
     void Controller::Acceleration(const AccType &acc_type, uint8_t num_square)
     {
         acc->ResetTrajectory(acc_type, cur_vel.x, num_square);
         mode_ctrl = acc_curve;
+        if (acc_type == AccType::forward)
+            flag_side_correct = true;
         while (1)
         {
             if (flag_ctrl)
@@ -194,11 +230,13 @@ namespace undercarriage
                 break;
             }
         }
+        Write_GPIO(LED_RED, GPIO_PIN_RESET);
     }
 
     void Controller::GoStraight()
     {
         mode_ctrl = forward;
+        flag_side_correct = true;
         while (1)
         {
             if (flag_ctrl)
@@ -367,10 +405,16 @@ namespace undercarriage
 
     float Controller::GetFrontWallPos(float ir_fmean)
     {
-        if (ir_param->log.b * ir_fmean + ir_param->log.c > 0)
-            return ir_param->log.a * log(ir_param->log.b * ir_fmean + ir_param->log.c) + ir_param->log.d;
-        else
-            return ir_param->log.a * log(1e-10) + ir_param->log.d;
+        // if (ir_param->log.b * ir_fmean + ir_param->log.c > 0)
+        //     return ir_param->log.a * log(ir_param->log.b * ir_fmean + ir_param->log.c) + ir_param->log.d;
+        // else
+        //     return ir_param->log.a * log(1e-10) + ir_param->log.d;
+        auto compareDistance = [ir_fmean](const xy_pair &a, const xy_pair &b)
+        {
+            return std::abs(a.first - ir_fmean) < std::abs(b.first - ir_fmean);
+        };
+        auto nearestIterator = std::min_element(ir_table.begin(), ir_table.end(), compareDistance);
+        return nearestIterator->second;
     };
 
     void Controller::Turn()
@@ -421,6 +465,10 @@ namespace undercarriage
         ref_vel.y = 0.0;
         ref_acc.x = acc->GetRefAcceleration();
         ref_acc.y = 0.0;
+        if (ref_acc.x < 0)
+            Write_GPIO(LED_RED, GPIO_PIN_SET);
+        else
+            Write_GPIO(LED_RED, GPIO_PIN_RESET);
         if (ENABLE_LOG)
             Logger();
         u_v = pid->trans_vel->Update(ref_vel.x - cur_vel.x) + (Tp1_v * ref_acc.x + ref_vel.x) / Kp_v;
@@ -451,6 +499,8 @@ namespace undercarriage
                 u_w = pid->ir_side->Update(error_fl - error_fr) + pid->angle->Update(theta_base - theta_global);
             else
                 u_w = pid->angle->Update(theta_base - theta_global);
+            if (ENABLE_LOG)
+                Logger();
             InputVelocity(u_v, u_w);
         }
         else
@@ -471,7 +521,7 @@ namespace undercarriage
         {
             Brake();
             odom->ResetEncoder();
-            flag_maze_load = true;
+            // flag_maze_load = true;
             flag_ctrl = true;
         }
     }
@@ -510,25 +560,27 @@ namespace undercarriage
         FrontWallCorrection();
         PivotTurn(-90);
         Back();
+        if (cnt_blind_alley >= CNT_BACK)
+        {
+            flag_maze_load = true;
+            while (1)
+            {
+                if (!flag_maze_load)
+                    break;
+            }
+        }
         Acceleration(AccType::start);
+        cnt_blind_alley = 0;
         cnt_can_back = 0;
     }
 
     void Controller::StartMove()
     {
-        PivotTurn(-90);
-        FrontWallCorrection();
         PivotTurn(90);
+        FrontWallCorrection();
+        PivotTurn(-90);
         Back();
         Acceleration(AccType::start);
-    }
-
-    void Controller::InitializePosition()
-    {
-        PivotTurn(90);
-        FrontWallCorrection();
-        PivotTurn(90);
-        Back();
     }
 
     void Controller::Brake()
@@ -556,11 +608,11 @@ namespace undercarriage
         odom->Reset();
         odom->ResetTheta();
         // theta_base = 0.0;
-        // mode_ctrl = stop;
+        // mode_ctrl = forward;
 
         flag_slalom = false;
         flag_side_correct = false;
-        index_log = 0;
+        // index_log = 0;
         cnt_time = 0;
         flag_ctrl = false;
     }
@@ -688,15 +740,12 @@ namespace undercarriage
         // printf("dir_diff = %d\n", dir_diff);
         // Straight Line
         if (dir_diff == 0)
-        {
-            flag_side_correct = true;
             GoStraight();
-        }
         // Turn Right
         else if (dir_diff == 1 || dir_diff == -3)
         {
             if (ENABLE_SLALOM)
-                Turn(-90);
+                Turn(SlalomType::right_90);
             else
             {
                 Acceleration(AccType::stop);
@@ -709,6 +758,12 @@ namespace undercarriage
                 if (cnt_can_back >= CNT_BACK && flag_wall_front && flag_wall_sl)
                 {
                     Back();
+                    // flag_maze_load = true;
+                    // while (1)
+                    // {
+                    //     if (!flag_maze_load)
+                    //         break;
+                    // }
                     Acceleration(AccType::start);
                     cnt_can_back = 0;
                 }
@@ -720,7 +775,7 @@ namespace undercarriage
         else if (dir_diff == -1 || dir_diff == 3)
         {
             if (ENABLE_SLALOM)
-                Turn(90);
+                Turn(SlalomType::left_90);
             else
             {
                 Acceleration(AccType::stop);
@@ -733,6 +788,12 @@ namespace undercarriage
                 if (cnt_can_back >= CNT_BACK && flag_wall_front && flag_wall_sl)
                 {
                     Back();
+                    // flag_maze_load = true;
+                    // while (1)
+                    // {
+                    //     if (!flag_maze_load)
+                    //         break;
+                    // }
                     Acceleration(AccType::start);
                     cnt_can_back = 0;
                 }
@@ -761,16 +822,19 @@ namespace undercarriage
     {
         switch (op.op)
         {
+        case Operation::START:
+            StartMove();
+            break;
         case Operation::FORWARD:
-            flag_side_correct = true;
-            for (int i = op.n; i > 0; i--)
-                GoStraight();
-            // Acceleration(AccType::forward, op.n);
+            // flag_side_correct = true;
+            // for (int i = op.n; i > 0; i--)
+            //     GoStraight();
+            Acceleration(AccType::forward, op.n);
             break;
 
         case Operation::TURN_LEFT90:
             if (ENABLE_SLALOM)
-                Turn(90);
+                Turn(SlalomType::left_90);
             else
             {
                 Acceleration(AccType::stop);
@@ -783,7 +847,7 @@ namespace undercarriage
 
         case Operation::TURN_RIGHT90:
             if (ENABLE_SLALOM)
-                Turn(-90);
+                Turn(SlalomType::right_90);
             else
             {
                 Acceleration(AccType::stop);
@@ -803,33 +867,113 @@ namespace undercarriage
         }
     }
 
+    void Controller::CalcOpMovedState(const OperationList &runSequence)
+    {
+        robot_position = IndexVec(0, 0);
+        robot_dir = NORTH;
+        for (size_t i = 0; i < runSequence.size(); i++)
+        {
+            switch (runSequence[i].op)
+            {
+            case Operation::START:
+                robot_position = IndexVec::vecNorth;
+                break;
+            case Operation::FORWARD:
+                if (robot_dir.byte == NORTH)
+                    robot_position += IndexVec::vecNorth;
+                else if (robot_dir.byte == EAST)
+                    robot_position += IndexVec::vecEast;
+                else if (robot_dir.byte == SOUTH)
+                    robot_position += IndexVec::vecSouth;
+                else if (robot_dir.byte == WEST)
+                    robot_position += IndexVec::vecWest;
+                break;
+            case Operation::TURN_LEFT90:
+                if (robot_dir.byte == NORTH)
+                {
+                    robot_position += IndexVec::vecWest;
+                    robot_dir.byte = WEST;
+                }
+                else if (robot_dir.byte == EAST)
+                {
+                    robot_position += IndexVec::vecNorth;
+                    robot_dir.byte = NORTH;
+                }
+                else if (robot_dir.byte == SOUTH)
+                {
+                    robot_position += IndexVec::vecEast;
+                    robot_dir.byte = EAST;
+                }
+                else if (robot_dir.byte == WEST)
+                {
+                    robot_position += IndexVec::vecSouth;
+                    robot_dir.byte = SOUTH;
+                }
+                break;
+            case Operation::TURN_RIGHT90:
+                if (robot_dir.byte == NORTH)
+                {
+                    robot_position += IndexVec::vecEast;
+                    robot_dir.byte = EAST;
+                }
+                else if (robot_dir.byte == EAST)
+                {
+                    robot_position += IndexVec::vecSouth;
+                    robot_dir.byte = SOUTH;
+                }
+                else if (robot_dir.byte == SOUTH)
+                {
+                    robot_position += IndexVec::vecWest;
+                    robot_dir.byte = WEST;
+                }
+                else if (robot_dir.byte == WEST)
+                {
+                    robot_position += IndexVec::vecNorth;
+                    robot_dir.byte = NORTH;
+                }
+                break;
+            default:
+                break;
+            }
+        }
+        // printf("IndexVec(%d, %d)\n", robot_position.x, robot_position.y);
+        // printf("robot_dir.byte = %d\n", robot_dir.byte);
+    }
+
     void Controller::Logger()
     {
-        log_x[index_log] = cur_pos.x;
-        log_y[index_log] = cur_pos.y;
-        // log_l[index_log] = length;
-        log_theta[index_log] = cur_pos.th;
-        log_omega[index_log] = cur_vel.th;
-        log_v[index_log] = cur_vel.x;
-        log_a[index_log] = acc_x;
-        log_ref_x[index_log] = ref_pos.x;
-        log_ref_y[index_log] = ref_pos.y;
-        log_ref_theta[index_log] = ref_pos.th;
-        log_ref_omega[index_log] = ref_vel.th;
-        log_ref_v[index_log] = ref_vel.x;
-
-        if (mode_ctrl == turn)
+        static int cnt_log = 0;
+        if (cnt_log % 5 == 0)
         {
-            log_ref_a[index_log] = ref_acc.x * cos(ref_pos.th) + ref_acc.y * sin(ref_pos.th);
-            log_ctrl_v[index_log] = ref_vel_ctrl.x;
-            log_ctrl_w[index_log] = ref_vel_ctrl.th;
-        }
-        if (mode_ctrl == acc_curve || mode_ctrl == forward)
-            log_ref_a[index_log] = ref_acc.x;
+            log_x[index_log] = cur_pos.x;
+            log_y[index_log] = cur_pos.y;
+            // log_l[index_log] = length;
+            log_theta[index_log] = cur_pos.th;
+            log_omega[index_log] = cur_vel.th;
+            log_v[index_log] = cur_vel.x;
+            log_a[index_log] = acc_x;
+            log_ref_x[index_log] = ref_pos.x;
+            log_ref_y[index_log] = ref_pos.y;
+            log_ref_theta[index_log] = ref_pos.th;
+            log_ref_omega[index_log] = ref_vel.th;
+            log_ref_v[index_log] = ref_vel.x;
 
-        log_u_v[index_log] = u_v;
-        log_u_w[index_log] = u_w;
-        index_log++;
+            if (mode_ctrl == turn)
+            {
+                log_ref_a[index_log] = ref_acc.x * cos(ref_pos.th) + ref_acc.y * sin(ref_pos.th);
+                log_ctrl_v[index_log] = ref_vel_ctrl.x;
+                log_ctrl_w[index_log] = ref_vel_ctrl.th;
+            }
+            if (mode_ctrl == acc_curve || mode_ctrl == forward)
+                log_ref_a[index_log] = ref_acc.x;
+
+            log_u_v[index_log] = u_v;
+            log_u_w[index_log] = u_w;
+            index_log++;
+        }
+        cnt_log++;
+        if (cnt_log >= ref_size)
+            cnt_log = 0;
     }
 
     void Controller::OutputLog()
@@ -862,7 +1006,8 @@ namespace undercarriage
     void Controller::OutputTranslationLog()
     {
         if (mode_ctrl == acc_curve)
-            ref_size = acc->GetRefSize();
+            ref_size = index_log;
+        // ref_size = acc->GetRefSize();
         for (int i = 0; i < ref_size; i++)
         {
             printf("%.3f, %.3f, %.3f, %.3f, ", log_x[i], log_y[i], log_v[i], log_a[i]);

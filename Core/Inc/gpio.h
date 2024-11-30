@@ -22,18 +22,17 @@
 #define __GPIO_H__
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-  /* USER CODE BEGIN Includes */
+/* USER CODE BEGIN Includes */
 
-  /* USER CODE END Includes */
+/* USER CODE END Includes */
 
-  /* USER CODE BEGIN Private defines */
+/* USER CODE BEGIN Private defines */
   typedef struct _GPIO_Value
   {
     GPIO_TypeDef *GPIOx;
@@ -62,11 +61,11 @@ extern "C"
   } Turn_Lamp;
 
   extern Turn_Lamp Mouse_Turn_Lamp;
-  /* USER CODE END Private defines */
+/* USER CODE END Private defines */
 
-  void MX_GPIO_Init(void);
+void MX_GPIO_Init(void);
 
-  /* USER CODE BEGIN Prototypes */
+/* USER CODE BEGIN Prototypes */
   GPIO_PinState Read_GPIO(GPIO_Value GPIO);
   void Toggle_GPIO(GPIO_Value GPIO);
   void Write_GPIO(GPIO_Value GPIO, GPIO_PinState PinState);
@@ -78,9 +77,10 @@ extern "C"
   // void SetRxLED(GPIO_PinState PinState);
   // void ActivateRxLED(void);
   // void ResetRxLED(void);
-  /* USER CODE END Prototypes */
+/* USER CODE END Prototypes */
 
 #ifdef __cplusplus
 }
 #endif
 #endif /*__ GPIO_H__ */
+

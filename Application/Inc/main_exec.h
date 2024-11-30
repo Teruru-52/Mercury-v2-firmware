@@ -13,8 +13,8 @@ extern "C"
 #endif
 #include "main.h"
 
-    void Startup();
-    void Init();
+    void StartupProcess();
+    void Initialize();
     void UpdateUndercarriage();
     void SetIRSensor();
     void UpdateIRSensor();
@@ -32,5 +32,7 @@ extern "C"
 #ifdef __cplusplus
 };
 #endif
+
+extern int cnt1Hz;
 
 #endif // MAIN_EXEC_H_
