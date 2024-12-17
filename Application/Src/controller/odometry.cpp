@@ -55,12 +55,12 @@ namespace undercarriage
     // pre_vel_x = vel_x;
 
     length = encoder.GetPosition();
-    cur_pos.x += (pre_length + length) * cos(cur_pos.th) * 0.5;
-    cur_pos.y += (pre_length + length) * sin(cur_pos.th) * 0.5;
+    cur_pos.x += (pre_length + length) * arm_cos_f32(cur_pos.th) * 0.5f;
+    cur_pos.y += (pre_length + length) * arm_sin_f32(cur_pos.th) * 0.5f;
     pre_length = length;
   }
 
-  void Odometory::  OutputLog()
+  void Odometory::OutputLog()
   {
     printf("%.3f, %.3f, %.3f, %.3f\n", cur_pos.x, cur_pos.y, cur_pos.th, acc_x);
     // printf("%f, %f\n", cur.pos[2], cur.vel[1]);

@@ -16,14 +16,14 @@ namespace undercarriage
 
     ctrl::Pose Kanayama::CalcInput(const ctrl::Pose &cur_pos, const ctrl::Pose &cur_v)
     {
-        const float cos_th = cos(cur_pos.th);
-        const float sin_th = sin(cur_pos.th);
+        const float cos_th = arm_cos_f32(cur_pos.th);
+        const float sin_th = arm_sin_f32(cur_pos.th);
         error_pos.x = (ref_pos.x - cur_pos.x) * cos_th + (ref_pos.y - cur_pos.y) * sin_th;
         error_pos.y = -(ref_pos.x - cur_pos.x) * sin_th + (ref_pos.y - cur_pos.y) * cos_th;
         error_pos.th = ref_pos.th - cur_pos.th;
 
-        ref_u.x = ref_vel.x * cos(error_pos.th) + Kx * error_pos.x;
-        ref_u.th = ref_vel.th + ref_vel.x * 1e-3 * (Ky * error_pos.y + Ktheta * sin(error_pos.th));
+        ref_u.x = ref_vel.x * arm_cos_f32(error_pos.th) + Kx * error_pos.x;
+        ref_u.th = ref_vel.th + ref_vel.x * 1e-3 * (Ky * error_pos.y + Ktheta * arm_sin_f32(error_pos.th));
 
         return ref_u;
     }
@@ -39,8 +39,8 @@ namespace undercarriage
     void DynamicFeedback::UpdateRef(const ctrl::Pose &ref_p, const ctrl::Pose &ref_v, const ctrl::Pose &ref_a)
     {
         ref_pos = ref_p;
-        cos_th_r = cos(ref_pos.th);
-        sin_th_r = sin(ref_pos.th);
+        cos_th_r = arm_cos_f32(ref_pos.th);
+        sin_th_r = arm_sin_f32(ref_pos.th);
         ref_vel.x = ref_v.x * cos_th_r;
         ref_vel.y = ref_v.x * sin_th_r;
         ref_vel.th = ref_v.th;
@@ -49,8 +49,8 @@ namespace undercarriage
 
     ctrl::Pose DynamicFeedback::CalcInput(const ctrl::Pose &cur_pos, const ctrl::Pose &cur_v)
     {
-        const float cos_th = cos(cur_pos.th);
-        const float sin_th = sin(cur_pos.th);
+        const float cos_th = arm_cos_f32(cur_pos.th);
+        const float sin_th = arm_sin_f32(cur_pos.th);
         cur_vel.x = cur_v.x * cos_th;
         cur_vel.y = cur_v.x * sin_th;
 
@@ -72,7 +72,7 @@ namespace undercarriage
             const auto k1 = 2 * zeta * sqrt(w_d * w_d + b * v_d * v_d);
             const auto k2 = b;
             const auto k3 = k1;
-            ref_u.x = v_d * cos(cos_th_r - cos_th) + k1 * (cos_th * (ref_pos.x - cur_pos.x) + sin_th * (ref_pos.y - cur_pos.y));
+            ref_u.x = v_d * arm_cos_f32(cos_th_r - cos_th) + k1 * (cos_th * (ref_pos.x - cur_pos.x) + sin_th * (ref_pos.y - cur_pos.y));
             ref_u.th = w_d + k2 * v_d * sinc(ref_pos.th - cur_pos.th) * (cos_th * (ref_pos.x - cur_pos.x) - sin_th * (ref_pos.y - cur_pos.y)) + k3 * (ref_pos.th - cur_pos.th);
         }
         else
@@ -99,22 +99,22 @@ namespace undercarriage
     void TimeVaryingFeedback::UpdateRef(const ctrl::Pose &ref_p, const ctrl::Pose &ref_v, const ctrl::Pose &ref_a)
     {
         ref_pos = ref_p;
-        cos_th_r = cos(ref_pos.th);
-        sin_th_r = sin(ref_pos.th);
+        cos_th_r = arm_cos_f32(ref_pos.th);
+        sin_th_r = arm_sin_f32(ref_pos.th);
         ref_vel = ref_v;
     }
 
     ctrl::Pose TimeVaryingFeedback::CalcInput(const ctrl::Pose &cur_pos, const ctrl::Pose &cur_v)
     {
-        const float cos_th = cos(cur_pos.th);
-        const float sin_th = sin(cur_pos.th);
+        const float cos_th = arm_cos_f32(cur_pos.th);
+        const float sin_th = arm_sin_f32(cur_pos.th);
 
         const float v_d = ref_vel.x;
         const float w_d = ref_vel.th;
         const auto k1 = 2 * zeta * sqrt(w_d * w_d + b * v_d * v_d);
         const auto k2 = b;
         const auto k3 = k1;
-        ref_u.x = v_d * cos(cos_th_r - cos_th) + k1 * (cos_th * (ref_pos.x - cur_pos.x) + sin_th * (ref_pos.y - cur_pos.y));
+        ref_u.x = v_d * arm_cos_f32(cos_th_r - cos_th) + k1 * (cos_th * (ref_pos.x - cur_pos.x) + sin_th * (ref_pos.y - cur_pos.y));
         ref_u.th = w_d + k2 * v_d * sinc(ref_pos.th - cur_pos.th) * (cos_th * (ref_pos.x - cur_pos.x) - sin_th * (ref_pos.y - cur_pos.y)) + k3 * (ref_pos.th - cur_pos.th);
         return ref_u;
     }
