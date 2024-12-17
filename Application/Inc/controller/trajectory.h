@@ -12,8 +12,6 @@
 #include "hardware/speaker.h"
 // #include <chrono>
 
-#define ENABLE_SLALOM 0
-
 #define FORWARD_LENGTH 180.0
 #define FORWARD_LENGTH_HALF 90.0
 #define FORWARD_LENGTH_START 138.0
@@ -104,8 +102,8 @@ namespace trajectory
         } SlalomType;
 
         explicit Slalom(Velocity *velocity, Parameters *params) : OnlineTrajectoryBase(velocity, params),
-                                                                  ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, 90, M_PI / 2), 80, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
-                                                                  //   ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, -90, M_PI / 2), -80, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
+                                                                  ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, 90, M_PI / 2), 90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
+                                                                  //   ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, -90, M_PI / 2), -90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
                                                                   ss(ss_turn90),
                                                                   st(ctrl::slalom::Trajectory(ss))
         {
@@ -123,7 +121,7 @@ namespace trajectory
         ctrl::slalom::Shape ss;
         ctrl::slalom::Trajectory st;
         ctrl::State state;
-        SlalomType slalom_type;
+        SlalomType slalom_type_;
         bool flag_mirror = false;
 
         ctrl::Pose ref_pos{0, 0, 0}; // absolute coordinates
