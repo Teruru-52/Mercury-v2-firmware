@@ -142,7 +142,8 @@ C_DEFS =  \
 -DSTM32F405xx \
 -DARM_MATH_CM4 \
 -D'__weak=__attribute__((weak))' \
--D'__packed=__attribute__((__packed__))'
+-D'__packed=__attribute__((__packed__))' \
+-DUSE_ARM_GCC
 
 CPP_DEFS = $(C_DEFS)
 
@@ -166,7 +167,8 @@ C_INCLUDES =  \
 -IApplication/Inc \
 -IApplication/Inc/hardware \
 -IMazeSolver2015 \
--Imicromouse-control-module/include/ctrl
+-Imicromouse-control-module/include/ctrl \
+-IDrivers/CMSIS/DSP/Include
 
 # C++ includes
 CPP_INCLUDES = $(C_INCLUDES)
@@ -195,7 +197,8 @@ LDSCRIPT = STM32F405RGTx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys -lstdc++
-LIBDIR = 
+LIBS += -larm_cortexM4lf_math
+LIBDIR = -L Drivers/CMSIS/Lib/GCC 
 # LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 LDFLAGS = $(MCU) -specs=rdimon.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 # default action: build all
