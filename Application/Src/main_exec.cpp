@@ -162,13 +162,13 @@ void Initialize()
         break;
 
     case State::func9:
-        controller.SetTrajectoryMode(2);
+        controller.SetTrajectoryMode(3);
         state.mode_ = State::test_slalom2;
         printf("mode: test_slalom2\n");
         break;
 
     case State::func10:
-        controller.SetTrajectoryMode(1);
+        controller.SetTrajectoryMode(2);
         state.mode_ = State::test_slalom1;
         printf("mode: test_slalom1\n");
         break;
@@ -180,7 +180,7 @@ void Initialize()
         break;
 
     case State::func12:
-        controller.SetTrajectoryMode(5);
+        controller.SetTrajectoryMode(2);
         state.mode_ = State::test_translation1;
         printf("mode: test_translation1\n");
         break;
@@ -284,13 +284,19 @@ void StateProcess()
         case State::test_slalom2: // func9
             controller.StartMove();
             // controller.Acceleration(AccType::start);
-            controller.GoStraight();
-            for (int i = 0; i < 7; i++)
+            // controller.GoStraight();
+            HAL_Delay(1);
+            controller.Turn(SlalomType::right_90);
+            // controller.Turn(SlalomType::left_90);
+            for (int i = 0; i < 6; i++)
             {
-                wallData = controller.getWallData();
-                controller.DirMove(WEST); // slalom
-                controller.Turn(SlalomType::left_90);
-                controller.GoStraight();
+                controller.Acceleration(AccType::forward, 1);
+                HAL_Delay(1);
+                controller.Turn(SlalomType::right_90);
+                // controller.Turn(SlalomType::left_90);
+                HAL_Delay(1);
+                controller.Turn(SlalomType::right_90);
+                // controller.Turn(SlalomType::left_90);
             }
             controller.Acceleration(AccType::stop);
             state.log_ = State::slalom;
@@ -301,17 +307,11 @@ void StateProcess()
             controller.StartMove();
             // controller.Acceleration(AccType::start);
             // controller.GoStraight();
-            HAL_Delay(100);
-            controller.Turn(SlalomType::left_90);
-            // controller.Turn(SlalomType::right_90);
-            // controller.Turn(SlalomType::right_90);
-            controller.GoStraight();
-            controller.Turn(SlalomType::left_90);
-            HAL_Delay(100);
-            controller.Turn(SlalomType::left_90);
-            // controller.GoStraight();
+            HAL_Delay(1);
+            // controller.Turn(SlalomType::left_90);
+            controller.Turn(SlalomType::right_90);
             controller.Acceleration(AccType::stop);
-            controller.FrontWallCorrection();
+            // controller.FrontWallCorrection();
             state.log_ = State::slalom;
             state.mode_ = State::output;
             break;
