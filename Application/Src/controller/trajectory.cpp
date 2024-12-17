@@ -18,7 +18,7 @@ namespace trajectory
     // Slalom
     void Slalom::ResetTrajectory(const SlalomType &slalom_type, float ref_theta, ctrl::Pose cur_pos)
     {
-        this->slalom_type = slalom_type;
+        slalom_type_ = slalom_type;
         state.q.x = state.q.y = 0;
         switch (trj_mode)
         {
@@ -45,18 +45,16 @@ namespace trajectory
         default:
             break;
         }
-        switch (slalom_type)
+        switch (slalom_type_)
         {
         case left_90:
-            // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90 - cur_pos.x, ref_theta), 80, 0, param.j_max, param.a_max, param.v_max);
-            // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 80, 0, param.j_max, param.a_max, param.v_max);
-            ss = ss_turn90;
+            ss = ctrl::slalom::Shape(ctrl::Pose(90, 90 - cur_pos.x, ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            // ss = ss_turn90;
             flag_mirror = false;
             break;
         case right_90:
-            // ss = ctrl::slalom::Shape(ctrl::Pose(90, -90 - cur_pos.x, ref_theta), -80, 0, param.j_max, param.a_max, param.v_max);
-            // ss = ctrl::slalom::Shape(ctrl::Pose(90, -90, ref_theta), -80, 0, param.j_max, param.a_max, param.v_max);
-            ss = ss_turn90;
+            ss = ctrl::slalom::Shape(ctrl::Pose(90, 90 - cur_pos.x, -ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            // ss = ss_turn90;
             flag_mirror = true;
             break;
         // case left_45:
