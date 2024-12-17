@@ -25,11 +25,11 @@ namespace undercarriage
     {
         if (ENABLE_LOG)
         {
-            // ref_size = slalom->GetRefSize();
+            ref_size = slalom->GetRefSize();
             // ref_size = acc->GetRefSize();
             // ref_size = pivot_turn180.GetRefSize();
             // ref_size = pivot_turn90.GetRefSize();
-            ref_size = 500;
+            // ref_size = 500;
 
             log_x = new float[ref_size];
             log_y = new float[ref_size];
@@ -176,8 +176,8 @@ namespace undercarriage
 
     void Controller::Turn(const SlalomType &slalom_type)
     {
-        this->slalom_type = slalom_type;
-        switch (slalom_type)
+        slalom_type_ = slalom_type;
+        switch (slalom_type_)
         {
         case SlalomType::left_90:
             ref_theta = M_PI * 0.5f;
@@ -196,7 +196,7 @@ namespace undercarriage
             break;
         }
         // slalom->ResetTrajectory(angle, ref_theta - theta_error, cur_pos);
-        slalom->ResetTrajectory(slalom_type, ref_theta, cur_pos);
+        slalom->ResetTrajectory(slalom_type_, ref_theta, cur_pos);
         tracker->SetXi(cur_vel.x);
         mode_ctrl = turn;
 
@@ -380,8 +380,8 @@ namespace undercarriage
         u_w = pid->rot_vel->Update(ref_w - cur_vel.th) + ref_w / Kp_w;
         // u_w = pid->rot_vel->Update(ref_w - cur_vel.th) + (Tp1_w * ref_dw + ref_w) / Kp_w;
         InputVelocity(u_v, u_w);
-        if (ENABLE_LOG)
-            Logger();
+        // if (ENABLE_LOG)
+        //     Logger();
         if (pivot_turn90.Finished() || pivot_turn180.Finished())
         {
             Brake();
@@ -399,16 +399,20 @@ namespace undercarriage
         tracker->UpdateRef(ref_pos, ref_vel, ref_acc);
         ref_vel_ctrl = tracker->CalcInput(cur_pos, cur_vel);
         // u_v = pid->trans_vel->Update(ref_vel_ctrl.x - cur_vel.x);
-        u_v = pid->trans_vel->Update(ref_vel_ctrl.x - cur_vel.x) + ref_vel_ctrl.x / Kp_v;
+        // u_v = pid->trans_vel->Update(ref_vel_ctrl.x - cur_vel.x); // without feedforward
+        u_v = pid->trans_vel->Update(ref_vel_ctrl.x - cur_vel.x) + ref_vel_ctrl.x / Kp_v; // with feedforward
         u_w = pid->rot_vel->Update(ref_vel_ctrl.th - cur_vel.th) + ref_vel_ctrl.th / Kp_w;
     }
 
     float Controller::GetFrontWallPos(float ir_fmean)
     {
+        // logaritmic function
         // if (ir_param->log.b * ir_fmean + ir_param->log.c > 0)
         //     return ir_param->log.a * log(ir_param->log.b * ir_fmean + ir_param->log.c) + ir_param->log.d;
         // else
         //     return ir_param->log.a * log(1e-10) + ir_param->log.d;
+
+        // table reference
         auto compareDistance = [ir_fmean](const xy_pair &a, const xy_pair &b)
         {
             return std::abs(a.first - ir_fmean) < std::abs(b.first - ir_fmean);
@@ -419,33 +423,35 @@ namespace undercarriage
 
     void Controller::Turn()
     {
-        // if (flag_wall_front) // 前壁があれば前壁補正
-        // {
-        //     if (!flag_slalom) // 前壁があり，slalomが始まっていなければ前壁補正
-        //     {
-        //         float ir_fmean = (ir_value.fl3 + ir_value.sr) * 0.5;
-        //         if (ir_fmean > ir_param->ctrl_base.slalom) // しきい値より前壁センサの平均値が大きければ，位置を上書きしてslalom開始
-        //         {
-        //             flag_slalom = true;
-        //             cur_pos.x = GetFrontWallPos(ir_fmean);
-        //             cur_pos.y = 0.0;
-        //             odom->OverWritePos(cur_pos);
-        //             slalom->ResetTrajectory(angle_turn, ref_theta - theta_error, cur_pos);
-        //             CalcSlalomInput();
-        //         }
-        //         else // しきい値より前壁センサの平均値が小さければ，slalomを開始せずに直進する
-        //         {
-        //             SideWallCorrection();
-        //             u_v = pid->trans_vel->Update(ref_v - cur_vel.x) + ref_v / Kp_v;
-        //             // u_w = pid->ir_side->Update(error_fl - error_fr) + pid->angle->Update(theta_base - theta_global);
-        //             u_w = pid->angle->Update(theta_base - theta_global);
-        //         }
-        //     }
-        //     else // 前壁があり，slalomが始まり次第この処理をする
-        //         CalcSlalomInput();
-        // }
-        // else // 前壁がない場合
-        CalcSlalomInput();
+        if (flag_wall_front && ENABLE_SLALOM_CORRECTION) // 前壁があれば前壁補正
+        {
+            if (!flag_slalom) // 前壁があり，slalomが始まっていなければ前壁補正
+            {
+                float ir_fmean = (ir_value.fl3 + ir_value.fr3) * 0.5f;
+                if (ir_fmean > ir_param->ctrl_base.slalom) // しきい値より前壁センサの平均値が大きければ，位置を上書きしてslalom開始
+                {
+                    flag_slalom = true;
+                    cur_pos.x = GetFrontWallPos(ir_fmean);
+                    cur_pos.y = 0.0;
+                    odom->OverWritePos(cur_pos);
+                    slalom->ResetTrajectory(slalom_type_, ref_theta, cur_pos);
+                    CalcSlalomInput();
+                }
+                else // しきい値より前壁センサの平均値が小さければ，slalomを開始せずに直進する
+                {
+                    SideWallCorrection();
+                    u_v = pid->trans_vel->Update(ref_v - cur_vel.x) + ref_v / Kp_v;
+                    if (flag_side_correct)
+                        u_w = pid->ir_side->Update(error_fl - error_fr) + pid->angle->Update(theta_base - theta_global);
+                    else
+                        u_w = pid->angle->Update(theta_base - theta_global);
+                }
+            }
+            else // 前壁があり，slalomが始まり次第この処理をする
+                CalcSlalomInput();
+        }
+        else // 前壁がない場合
+            CalcSlalomInput();
 
         InputVelocity(u_v, u_w);
         if (ENABLE_LOG)
@@ -469,8 +475,8 @@ namespace undercarriage
             Write_GPIO(LED_RED, GPIO_PIN_SET);
         else
             Write_GPIO(LED_RED, GPIO_PIN_RESET);
-        if (ENABLE_LOG)
-            Logger();
+        // if (ENABLE_LOG)
+        //     Logger();
         u_v = pid->trans_vel->Update(ref_vel.x - cur_vel.x) + (Tp1_v * ref_acc.x + ref_vel.x) / Kp_v;
         // u_v = pid->trans_vel->Update(ref_vel.x - cur_vel.x);
 
@@ -499,8 +505,8 @@ namespace undercarriage
                 u_w = pid->ir_side->Update(error_fl - error_fr) + pid->angle->Update(theta_base - theta_global);
             else
                 u_w = pid->angle->Update(theta_base - theta_global);
-            if (ENABLE_LOG)
-                Logger();
+            // if (ENABLE_LOG)
+            //     Logger();
             InputVelocity(u_v, u_w);
         }
         else
@@ -943,7 +949,7 @@ namespace undercarriage
     void Controller::Logger()
     {
         static int cnt_log = 0;
-        if (cnt_log % 5 == 0)
+        if (cnt_log % CNT_LOG == 0)
         {
             log_x[index_log] = cur_pos.x;
             log_y[index_log] = cur_pos.y;
@@ -985,7 +991,7 @@ namespace undercarriage
     void Controller::OutputSlalomLog()
     {
         ref_size = slalom->GetRefSize();
-        for (int i = 0; i < ref_size; i++)
+        for (int i = 0; i < ref_size / CNT_LOG; i++)
         {
             printf("%.2f, %.2f, %.3f, %.2f, %.3f, %.1f, ", log_x[i], log_y[i], log_theta[i], log_v[i], log_omega[i], log_a[i]);
             printf("%.2f, %.2f, %.3f, %.1f, %.3f, %.1f, ", log_ref_x[i], log_ref_y[i], log_ref_theta[i], log_ref_v[i], log_ref_omega[i], log_ref_a[i]);
@@ -1008,7 +1014,7 @@ namespace undercarriage
         if (mode_ctrl == acc_curve)
             ref_size = index_log;
         // ref_size = acc->GetRefSize();
-        for (int i = 0; i < ref_size; i++)
+        for (int i = 0; i < ref_size / CNT_LOG; i++)
         {
             printf("%.3f, %.3f, %.3f, %.3f, ", log_x[i], log_y[i], log_v[i], log_a[i]);
             printf("%.3f, %.3f, %.3f, ", log_ref_x[i], log_ref_v[i], log_ref_a[i]);
