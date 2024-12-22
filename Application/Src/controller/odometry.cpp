@@ -48,12 +48,6 @@ namespace undercarriage
     cur_vel.x = vel_x;
     cur_vel.y = 0.0;
 
-    // Bilinear transform
-    // cur_pos.x += (vel_x + pre_vel_x) * cos(cur_pos.th) * sampling_period * 0.5;
-    // cur_pos.y += (vel_x + pre_vel_x) * sin(cur_pos.th) * sampling_period * 0.5;
-    // length += (vel_x + pre_vel_x) * sampling_period * 0.5;
-    // pre_vel_x = vel_x;
-
     length = encoder.GetPosition();
     cur_pos.x += (pre_length + length) * arm_cos_f32(cur_pos.th) * 0.5f;
     cur_pos.y += (pre_length + length) * arm_sin_f32(cur_pos.th) * 0.5f;
@@ -63,9 +57,5 @@ namespace undercarriage
   void Odometory::OutputLog()
   {
     printf("%.3f, %.3f, %.3f, %.3f\n", cur_pos.x, cur_pos.y, cur_pos.th, acc_x);
-    // printf("%f, %f\n", cur.pos[2], cur.vel[1]);
-    // printf("%f\n", acc_x);
-    // printf("%f, %f\n", cur_pos.x, cur_pos.y);
-    // printf("%f, %f\n", cur_pos.th, cur_vel.th);
   }
 } //  namespace undercarriage
