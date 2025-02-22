@@ -13,8 +13,8 @@ namespace hardware
 
     void IRsensor::OnLed()
     {
+        // __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 70);
         __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 70);
-        __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 70);
         __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_4, 70);
     }
 

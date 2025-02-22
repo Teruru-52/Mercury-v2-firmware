@@ -16,11 +16,11 @@ namespace trajectory
     }
 
     // Slalom
-    void Slalom::ResetTrajectory(const SlalomType &slalom_type, float ref_theta, ctrl::Pose cur_pos)
+    void Slalom::ResetTrajectory(const SlalomType &slalom_type, float ref_theta, float x_diff)
     {
         slalom_type_ = slalom_type;
         state.q.x = state.q.y = 0;
-        switch (trj_mode)
+        switch (trj_mode_)
         {
         case 1:
             v_ref = velocity->v1;
@@ -48,32 +48,32 @@ namespace trajectory
         switch (slalom_type_)
         {
         case left_90:
-            ss = ctrl::slalom::Shape(ctrl::Pose(90, 90 - cur_pos.x, ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90, ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
             // ss = ss_turn90;
             flag_mirror = false;
             break;
         case right_90:
-            ss = ctrl::slalom::Shape(ctrl::Pose(90, 90 - cur_pos.x, -ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            ss = ctrl::slalom::Shape(ctrl::Pose(90 - x_diff, 90, -ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, -ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
             // ss = ss_turn90;
             flag_mirror = true;
             break;
         // case left_45:
-        //     ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, M_PI * 0.25f), 0, 0, param.j_max, param.a_max, param.v_max);
+        //     ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+        //     flag_mirror = false;
         //     break;
         // case right_45:
-        //     ss = ctrl::slalom::Shape(ctrl::Pose(90, -90, -M_PI * 0.25f), 0, 0, param.j_max, param.a_max, param.v_max);
+        //     ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, -ref_theta), 20, 0, param.j_max, param.a_max, param.v_max);
+        //     flag_mirror = true;
         //     break;
         default:
             break;
         }
 
         st = ctrl::slalom::Trajectory(ss, flag_mirror);
-        st.reset(v_ref, 0, 0);
-        t = cur_pos.x / v_ref;
-        if (t < 0)
-            t = 0;
-        // st.reset(v_ref, 0, t);
-        t_end = st.getTimeCurve();
+        st.reset(v_ref, 0, ss.straight_prev / v_ref);
+        t_end = st.getTimeCurve() + ss.straight_post / v_ref;
     }
 
     void Slalom::UpdateRef()
@@ -90,20 +90,23 @@ namespace trajectory
         ref_acc.th = state.ddq.th;
 
         t += Ts;
-        if ((t > t_end * 0.9) && (!flag_time))
+        if ((t > t_end * WALL_TIMING) && (!flag_time))
         {
-            flag_read_side_wall = true;
+            // flag_read_side_wall = true;
             flag_time = true;
         }
-        if (t + Ts > t_end)
+        if (t > t_end)
+        {
+            flag_read_side_wall = true;
             flag_trj = true;
+        }
     }
 
     // Acceleration
     void Acceleration::ResetTrajectory(const AccType &acc_type, float cur_vel, uint8_t num_square)
     {
         this->acc_type = acc_type;
-        switch (trj_mode)
+        switch (trj_mode_)
         {
         case 1:
             v_ref = velocity->v1;
@@ -160,7 +163,7 @@ namespace trajectory
         t += Ts;
         if (acc_type != stop)
         {
-            if ((t > t_end * 0.8) && (!flag_time))
+            if ((t > t_end * WALL_TIMING) && (!flag_time))
             {
                 flag_read_side_wall = true;
                 flag_time = true;
@@ -185,7 +188,7 @@ namespace trajectory
             ref_a = ref_dw[index];
             index++;
         }
-        else if (index == ref_size)
+        else if (index >= ref_size)
         {
             flag = true;
         }
@@ -199,7 +202,7 @@ namespace trajectory
             ref_a = ref_dw[index];
             index++;
         }
-        else if (index == ref_size)
+        else if (index >= ref_size)
         {
             flag = true;
         }
@@ -213,7 +216,7 @@ namespace trajectory
             ref = ref_u_w[index];
             index++;
         }
-        else if (index == ref_size)
+        else if (index >= ref_size)
         {
             flag = true;
         }

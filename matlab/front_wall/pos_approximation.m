@@ -2,17 +2,19 @@ clear;
 close all;
 
 %% load log
-% data = csvread("data_long_x.csv");% tokyo tech
-% data = csvread("data_short_x.csv"); % tokyo tech
-data = csvread("data_short_RT.csv"); % tokyo tech
+% data = csvread("data_x_home.csv");
+% data = csvread("data_x_science_tokyo.csv");
+data = csvread("data_x.csv");
 n = length(data);
 
 ir_value = data(1:2:n, :); % odd rows
 pos = data(2:2:n, :); % even rows
 
-ir_sl = ir_value(:,3);
-ir_sr = ir_value(:,4);
-ir_s = (ir_sl + ir_sr) / 2;
+ir_fl3 = ir_value(:,3);
+ir_fr3 = ir_value(:,6);
+
+% ir_s = (ir_fl3 + ir_fr3) / 2;
+ir_s = ir_fr3;
 
 pos_x = pos(:,1);
 % pos_y = pos(:,2);
@@ -26,7 +28,9 @@ t = t'*ts;
 %     log_fittype = fittype("a*log(b*x+c)+d", dependent="y", independent="x", coefficients=["a" "b" "c" "d"]);
     log_fittype = fittype("a*log(max(1e-15, b * x + c))+d", dependent="y", independent="x", coefficients=["a" "b" "c" "d"]);
 
-    a = 20; b = 0.005;  c = 1 - 2287*b; d = 0.01;
+    % a = 20; b = 0.005;  c = 1 - 2287*b; d = 0.01;
+    a = 20; b = 0.05;  c = 1 - 2287*b; d = 0.1;
+    % a = 10; b = 0.05;  c = 1 - 2287*b; d = 0.01;
     % b*ir_s + c % must be positive
     initialCoefficients = [a, b, c, d];
     for i = 1:10
@@ -40,10 +44,10 @@ t = t'*ts;
 
 %% output table
 % ir_table = 2200:2:2600;
-ir_table = 2200:2500;
+ir_table = 2400:2600;
 x_table =  f.a.*log(f.b*ir_table + f.c) + f.d;
 
-fprintf('{');
+fprintf('const std::vector<xy_pair> ir_table = {');
 for i = 1:length(ir_table)
     if i == length(ir_table)
         fprintf('{%d, %.4f}', ir_table(i), x_table(i));
@@ -87,7 +91,7 @@ ylim([ir_min ir_max]);
 set(gca, "FontName", "Times New Roman", "FontSize", 15);
 
 subplot(3,2,5);
-plot(t, ir_sl,'LineWidth',3);
+plot(t, ir_fl3,'LineWidth',3);
 grid on;
 xlabel('Time [s]','Interpreter','latex');
 ylabel('IR sensor value (left)','Interpreter','latex');
@@ -96,7 +100,7 @@ ylim([ir_min ir_max]);
 set(gca, "FontName", "Times New Roman", "FontSize", 15);
 
 subplot(3,2,6);
-plot(t, ir_sr,'LineWidth',3);
+plot(t, ir_fr3,'LineWidth',3);
 grid on;
 xlabel('Time [s]','Interpreter','latex');
 ylabel('IR sensor value (right)','Interpreter','latex');

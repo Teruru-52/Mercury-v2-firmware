@@ -64,7 +64,7 @@ public:
         m_identification,
         step_identification,
         party_trick,
-        error
+        // error
     } Mode;
 
     typedef enum

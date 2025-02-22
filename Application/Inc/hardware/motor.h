@@ -22,7 +22,7 @@ namespace hardware
         float current_left;
         float current_right;
         const int calibration_rounds = 500;
-        const float sens_coeff = 1000.0f / 264.0f;
+        const float sens_coeff = 1000.0f / 264.0f; // [A/V]
         float offset_current_left = 0.0f;
         float offset_current_right = 0.0f;
         const float zero_current_output = ADC_REF_VOLTAGE * 0.5f;

@@ -10,12 +10,15 @@
 #include "main.h"
 #include "slalom.h"
 #include "hardware/speaker.h"
+#include <memory>
 // #include <chrono>
 
 #define FORWARD_LENGTH 180.0
 #define FORWARD_LENGTH_HALF 90.0
-#define FORWARD_LENGTH_START 138.0
+#define FORWARD_LENGTH_START 140.0
+// #define FORWARD_LENGTH_START 137.0
 // #define BACK_LENGTH -70.0
+#define WALL_TIMING 1.0f
 
 /**
  * @brief namespace for trajectory generation
@@ -62,13 +65,15 @@ namespace trajectory
     class OnlineTrajectoryBase
     {
     protected:
-        Velocity *velocity;
-        Parameters *params;
+        // Velocity *velocity;
+        std::unique_ptr<Velocity> velocity;
+        // Parameters *params;
+        std::unique_ptr<Parameters> params;
         float v_ref = 0;
         Parameter param;
 
         bool flag_trj = false;
-        int trj_mode = 1;
+        int trj_mode_ = 1;
         const float Ts = 1e-3;
         float t = 0;
         float t_end = 0;
@@ -77,7 +82,7 @@ namespace trajectory
 
     public:
         explicit OnlineTrajectoryBase(Velocity *velocity, Parameters *params) : velocity(velocity), params(params) {};
-        void SetMode(int trj_mode) { this->trj_mode = trj_mode; };
+        void SetMode(int trj_mode) { trj_mode_ = trj_mode; };
         int GetRefSize() { return t_end * 1e+3; };
         virtual void UpdateRef() = 0;
         bool Finished() { return flag_trj; };
@@ -102,22 +107,21 @@ namespace trajectory
         } SlalomType;
 
         explicit Slalom(Velocity *velocity, Parameters *params) : OnlineTrajectoryBase(velocity, params),
-                                                                  ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, 90, M_PI / 2), 90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
-                                                                  //   ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, -90, M_PI / 2), -90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
-                                                                  ss(ss_turn90),
+                                                                  //   ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, 90, M_PI / 2), 90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
+                                                                  ss(ctrl::slalom::Shape(ctrl::Pose(90, -90, M_PI / 2), -90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
+                                                                  //   ss(ss_turn90),
                                                                   st(ctrl::slalom::Trajectory(ss))
         {
-            ResetTrajectory(left_90, M_PI * 0.5f, {0, 0, 0});
+            ResetTrajectory(left_90, M_PI * 0.5f);
         };
-        // void ResetTrajectory(const SlalomType &slalom_type = left_90, float ref_theta = M_PI * 0.5, ctrl::Pose cur_pos = {0, 0, 0});
-        void ResetTrajectory(const SlalomType &slalom_type, float ref_theta, ctrl::Pose cur_pos);
+        void ResetTrajectory(const SlalomType &slalom_type, float ref_theta, float x_diff = 0);
         void UpdateRef() override;
         ctrl::Pose GetRefPosition() { return ref_pos; };
         ctrl::Pose GetRefVelocity() { return ref_vel; };
         ctrl::Pose GetRefAcceleration() { return ref_acc; };
 
     private:
-        ctrl::slalom::Shape ss_turn90;
+        // ctrl::slalom::Shape ss_turn90;
         ctrl::slalom::Shape ss;
         ctrl::slalom::Trajectory st;
         ctrl::State state;

@@ -28,7 +28,7 @@ namespace hardware
             led.OnFrontRight2();
         if (battery_voltage > 7.0)
             led.OnFrontRight3();
-        printf("battery: %.2f [V]\n", battery_voltage);
+        // printf("battery: %.2f [V]\n", battery_voltage);
     }
 
     void Motor::UpdateBatteryVoltage()
@@ -51,7 +51,7 @@ namespace hardware
         offset_current_left = current_left_sum / static_cast<float>(calibration_rounds);
         offset_current_right = current_right_sum / static_cast<float>(calibration_rounds);
 
-        printf("offset_current_left: %.3f, offset_current_right: %.3f\n", offset_current_left, offset_current_right);
+        // printf("offset_current_left: %.3f, offset_current_right: %.3f\n", offset_current_left, offset_current_right);
         Write_GPIO(LED_RED, GPIO_PIN_RESET);
     }
 
@@ -59,6 +59,10 @@ namespace hardware
     {
         float amp_voltage_left = static_cast<float>(dma_data[0]) * ADC_REF_VOLTAGE / ADC_RESOLUTION;
         float amp_voltage_right = static_cast<float>(dma_data[1]) * ADC_REF_VOLTAGE / ADC_RESOLUTION;
+        // static int a = 0;
+        // a = (a + 1) % 100;
+        // if (a == 0)
+        //     printf("amp_voltage_left: %.3f, amp_voltage_right: %.3f\n", amp_voltage_left, amp_voltage_right);
         current_left = (amp_voltage_left - zero_current_output) * sens_coeff - offset_current_left;
         current_right = (amp_voltage_right - zero_current_output) * sens_coeff - offset_current_right;
     }
@@ -71,7 +75,7 @@ namespace hardware
     void Motor::Drive(float v_left, float v_right)
     {
         UpdateBatteryVoltage();
-        UpdateCurrent();
+        // UpdateCurrent();
 
         duty_left = GetDuty(v_left);
         duty_right = GetDuty(v_right);
@@ -119,6 +123,9 @@ namespace hardware
 
     void Motor::Free()
     {
+        UpdateBatteryVoltage();
+        UpdateCurrent();
+
         __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, 0);
         __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, 0);
         __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);

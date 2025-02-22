@@ -24,6 +24,8 @@ extern "C"
     void MazeSearch();
     void TimeAttack();
     void StateProcess();
+    bool GetStartCountFlag();
+    void CheckMazeFlashFlag();
     void FlashMaze();
     void LoadMaze();
 

@@ -24,7 +24,7 @@ input_v = data(:,15);
 input_w = data(:,16);
 
 n = length(data_x);
-ts = 0.001;
+ts = 0.005;
 t = 0:1:n-1;
 t = t'*ts;
 %% plot data
@@ -74,7 +74,7 @@ plot(t, ref_a,'LineWidth',3);
 % xlabel('Time [s]','Interpreter','latex');
 ylabel('$a$ [mm$^2$/s]','Interpreter','latex');
 xlim([0 max(t)])
-legend('data', 'ref','Interpreter','latex','Location','northwest')
+legend('data', 'ref','Interpreter','latex','Location','southeast')
 set(gca, "FontName", "Times New Roman", "FontSize", 15);
 
 subplot(5,2,6);
@@ -97,7 +97,7 @@ plot(t, ref_new_v,'LineWidth',3);
 % xlabel('Time [s]','Interpreter','latex');
 ylabel('$v$ [mm/s]','Interpreter','latex');
 xlim([0 max(t)])
-legend('data','ref', 'new ref','Interpreter','latex','Location','northwest')
+legend('data','ref', 'new ref','Interpreter','latex','Location','southeast')
 set(gca, "FontName", "Times New Roman", "FontSize", 15);
 
 subplot(5,2,8);
@@ -109,7 +109,7 @@ plot(t, ref_new_w,'LineWidth',3);
 % xlabel('Time [s]','Interpreter','latex');
 ylabel('$\omega$ [rad/s]','Interpreter','latex');
 xlim([0 max(t)])
-legend('data', 'ref', 'new ref','Interpreter','latex','Location','northwest')
+legend('data', 'ref', 'new ref','Interpreter','latex','Location','southeast')
 set(gca, "FontName", "Times New Roman", "FontSize", 15);
 
 subplot(5,2,9);

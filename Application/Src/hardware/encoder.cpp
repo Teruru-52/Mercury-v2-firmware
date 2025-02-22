@@ -88,9 +88,14 @@ namespace hardware
         return static_cast<float>(pulse) / ppr * coeff_pulse2angle;
     }
 
+    // float Encoder::GetVelocity()
+    // {
+    //     return (GetAngularVelocity(pulse_left) + GetAngularVelocity(pulse_right)) * tire_radius * 0.5f;
+    // }
+
     float Encoder::GetVelocity()
     {
-        return (GetAngularVelocity(pulse_left) + GetAngularVelocity(pulse_right)) * tire_radius * 0.5f;
+        return (GetAngularVelocity(pulse_left) * tire_radius_l + GetAngularVelocity(pulse_right) * tire_radius_r) * 0.5f;
     }
 
     float Encoder::GetPosition()

@@ -27,13 +27,17 @@ namespace hardware
         float GetPosition();
 
     private:
-        float gear_ratio = 11.0f / 43.0f;
+        const float gear_ratio = 11.0f / 43.0f;
         float sampling_period; // [s]
-        // float tire_radius = 12.8; // [mm]
-        // float tire_radius = 13.0; // [mm]
-        float tire_radius = 13.1; // [mm]
-        // const float ppr = 2048.0;
-        const float ppr = 1024.0;
+        // const float tire_radius = 12.7f; // [mm]
+        const float tire_radius = 12.8f; // [mm]
+        // const float tire_radius = 12.9f; // [mm]
+        // const float tire_radius = 13.0f; // [mm]
+        // const float tire_radius = 13.1f; // [mm]
+        // const float tire_radius_l = tire_radius * 1.1f; // [mm]
+        const float tire_radius_l = tire_radius; // [mm]
+        const float tire_radius_r = tire_radius; // [mm]
+        const float ppr = 1024.0f;
         float coeff_pulse2angle;
         float coeff_pulse2vel;
         int16_t pulse_left;

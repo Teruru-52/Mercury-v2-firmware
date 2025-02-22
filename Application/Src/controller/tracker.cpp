@@ -23,7 +23,7 @@ namespace undercarriage
         error_pos.th = ref_pos.th - cur_pos.th;
 
         ref_u.x = ref_vel.x * arm_cos_f32(error_pos.th) + Kx * error_pos.x;
-        ref_u.th = ref_vel.th + ref_vel.x * 1e-3 * (Ky * error_pos.y + Ktheta * arm_sin_f32(error_pos.th));
+        ref_u.th = ref_vel.th + ref_vel.x * (Ky * error_pos.y + Ktheta * arm_sin_f32(error_pos.th));
 
         return ref_u;
     }

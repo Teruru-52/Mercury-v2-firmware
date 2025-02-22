@@ -35,6 +35,7 @@ namespace hardware
         tx_data[1] = 0x00; // dummy
 
         Write_GPIO(SPI1_CS, GPIO_PIN_RESET);
+        // HAL_SPI_TransmitReceive_IT(&hspi1, tx_data, rx_data, 2);
         HAL_SPI_TransmitReceive(&hspi1, tx_data, rx_data, 2, 1);
         Write_GPIO(SPI1_CS, GPIO_PIN_SET);
 
@@ -51,6 +52,7 @@ namespace hardware
         tx_data[1] = data; // write data
 
         Write_GPIO(SPI1_CS, GPIO_PIN_RESET);
+        // HAL_SPI_TransmitReceive_IT(&hspi1, tx_data, rx_data, 2);
         HAL_SPI_TransmitReceive(&hspi1, tx_data, rx_data, 2, 10);
         Write_GPIO(SPI1_CS, GPIO_PIN_SET);
     }
@@ -60,6 +62,7 @@ namespace hardware
         uint8_t who_am_i;
         Write_GPIO(SPI1_CS, GPIO_PIN_SET);
         __HAL_SPI_ENABLE(&hspi1); // clockが動かないように、あらかじめEnableにしておく
+        // __HAL_SPI_ENABLE_IT(&hspi1, SPI_IT_TXE | SPI_IT_RXNE);
 
         HAL_Delay(10);                      // wait start up
         who_am_i = read_byte(SPI_WHO_AM_I); // read who am i

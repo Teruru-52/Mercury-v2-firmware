@@ -7,6 +7,7 @@
 #define PID_CONTROLLER_H
 
 #include "main.h"
+#include <memory>
 
 // 後退差分による離散化
 
@@ -65,12 +66,12 @@ private:
 class PID_Instances
 {
 public:
-    PID *angle;
-    PID *rot_vel;
-    PID *trans_vel;
-    PID *ir_front_l;
-    PID *ir_front_r;
-    PID *ir_side;
+    std::unique_ptr<PID> angle;
+    std::unique_ptr<PID> rot_vel;
+    std::unique_ptr<PID> trans_vel;
+    std::unique_ptr<PID> ir_front_l;
+    std::unique_ptr<PID> ir_front_r;
+    std::unique_ptr<PID> ir_side;
 
     PID_Instances(PID *angle,
                   PID *rot_vel,
@@ -83,7 +84,7 @@ public:
           trans_vel(trans_vel),
           ir_front_l(ir_front_l),
           ir_front_r(ir_front_r),
-          ir_side(ir_side){};
+          ir_side(ir_side) {};
 
     void Reset()
     {
