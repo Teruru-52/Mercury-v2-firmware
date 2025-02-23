@@ -108,8 +108,7 @@ namespace trajectory
 
         explicit Slalom(Velocity *velocity, Parameters *params) : OnlineTrajectoryBase(velocity, params),
                                                                   //   ss_turn90(ctrl::slalom::Shape(ctrl::Pose(90, 90, M_PI / 2), 90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
-                                                                  ss(ctrl::slalom::Shape(ctrl::Pose(90, -90, M_PI / 2), -90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
-                                                                  //   ss(ss_turn90),
+                                                                  ss(ctrl::slalom::Shape(ctrl::Pose(90, 90, M_PI / 2), 90, 0, params->run1.j_max, params->run1.a_max, params->run1.v_max)),
                                                                   st(ctrl::slalom::Trajectory(ss))
         {
             ResetTrajectory(left_90, M_PI * 0.5f);

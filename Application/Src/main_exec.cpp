@@ -350,7 +350,6 @@ void StateProcess()
             wallData = controller.getWallData(); // front wall correction
             controller.Turn(SlalomType::left_90);
             controller.Acceleration(AccType::stop);
-            // controller.FrontWallCorrection();
             state.log_ = State::slalom;
             state.mode_ = State::output;
             break;

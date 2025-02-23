@@ -48,15 +48,13 @@ namespace trajectory
         switch (slalom_type_)
         {
         case left_90:
-            ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90, ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90.0f, ref_theta), 90.0f, 0, param.j_max, param.a_max, param.v_max);
             // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
-            // ss = ss_turn90;
             flag_mirror = false;
             break;
         case right_90:
-            ss = ctrl::slalom::Shape(ctrl::Pose(90 - x_diff, 90, -ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
+            ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90.0f, -ref_theta), 90.0f, 0, param.j_max, param.a_max, param.v_max);
             // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, -ref_theta), 90, 0, param.j_max, param.a_max, param.v_max);
-            // ss = ss_turn90;
             flag_mirror = true;
             break;
         // case left_45:

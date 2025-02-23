@@ -28,21 +28,6 @@ const float ir_start_base = 3300;
 // const float ir_slalom = 2450; // front wall correction (slalom)
 
 // science tokyo
-const float ir_fl1_wall = 2150; // WALL_TIMING 0.8
-const float ir_fl2_wall = 2500;
-const float ir_fl3_wall = 2300;
-const float ir_fr1_wall = 2200;
-const float ir_fr2_wall = 2800;
-const float ir_fr3_wall = 2300;
-const float ir_fl1_base = 2220;
-const float ir_fl2_base = 2800;
-const float ir_fl3_base = 3400;
-const float ir_fr1_base = 3650;
-const float ir_fr2_base = 3050;
-const float ir_fr3_base = 3180;
-const float ir_slalom = 2420; // front wall correction (slalom)
-
-// Tokyo univercity of science
 // const float ir_fl1_wall = 2150; // WALL_TIMING 0.8
 // const float ir_fl2_wall = 2500;
 // const float ir_fl3_wall = 2300;
@@ -51,11 +36,26 @@ const float ir_slalom = 2420; // front wall correction (slalom)
 // const float ir_fr3_wall = 2300;
 // const float ir_fl1_base = 2220;
 // const float ir_fl2_base = 2800;
-// const float ir_fl3_base = 3150;
+// const float ir_fl3_base = 3400;
 // const float ir_fr1_base = 3650;
 // const float ir_fr2_base = 3050;
-// const float ir_fr3_base = 3000;
-// const float ir_slalom = 2400; // front wall correction (slalom)
+// const float ir_fr3_base = 3180;
+// const float ir_slalom = 2420; // front wall correction (slalom)
+
+// Contest
+const float ir_fl1_wall = 2150; // WALL_TIMING 0.8
+const float ir_fl2_wall = 2500;
+const float ir_fl3_wall = 2300;
+const float ir_fr1_wall = 2200;
+const float ir_fr2_wall = 2800;
+const float ir_fr3_wall = 2300;
+const float ir_fl1_base = 2220;
+const float ir_fl2_base = 2800;
+const float ir_fl3_base = 3150;
+const float ir_fr1_base = 3650;
+const float ir_fr2_base = 3050;
+const float ir_fr3_base = 3000;
+const float ir_slalom = 2400; // front wall correction (slalom)
 
 hardware::IR_Value ir_value;
 // for wall judgement
@@ -82,7 +82,7 @@ PID pid_traslational_vel(0.03f, 0.01f, 0.0f, 0.02f, control_period);
 PID pid_ir_front_left(0.0008f, 0.000005f, 0.0, 0.0, control_period);
 PID pid_ir_front_right(0.0008f, 0.000005f, 0.0, 0.0, control_period);
 // PID pid_ir_side(0.002f, 0.000, 0.0, 0.0, control_period);
-PID pid_ir_side(0.001f, 0.000, 0.0, 0.0, control_period);
+PID pid_ir_side(0.001f, 0.0, 0.0, 0.0, control_period);
 
 PID_Instances pid(&pid_angle,
                   &pid_rotational_vel,
@@ -99,18 +99,21 @@ undercarriage::TrackerBase *tracker = &kanayama;
 // undercarriage::TrackerBase *tracker = &time_varying_feedback;
 
 // translational velocity
-trajectory::Velocity velocity = {.v1 = 250.0f, .v2 = 300.0f, .v3 = 350.0f, .v4 = 400.0f, .v5 = 1000.0f};
+trajectory::Velocity velocity = {.v1 = 200.0f, .v2 = 300.0f, .v3 = 350.0f, .v4 = 400.0f, .v5 = 1000.0f};
 
-trajectory::Parameter acc_param1 = {.v_max = 2.5e+2f, .a_max = 1.0e+4f, .j_max = 1.0e+5f};
-trajectory::Parameter acc_param2 = {.v_max = 3.0e+2f, .a_max = 1.0e+4f, .j_max = 1.0e+5f};
-trajectory::Parameter acc_param3 = {.v_max = 3.5e+2f, .a_max = 1.0e+4f, .j_max = 1.0e+5f};
-trajectory::Parameter acc_param4 = {.v_max = 4.0e+3f, .a_max = 1.5e+4f, .j_max = 1.5e+5f};
-trajectory::Parameter acc_param5 = {.v_max = 1.5e+3f, .a_max = 1.2e+4f, .j_max = 1.5e+5f};
+trajectory::Parameter acc_param1 = {.v_max = 2.0e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
+trajectory::Parameter acc_param2 = {.v_max = 3.0e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
+trajectory::Parameter acc_param3 = {.v_max = 3.5e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
+trajectory::Parameter acc_param4 = {.v_max = 4.0e+3f, .a_max = 1.5e+4f, .j_max = 2.5e+5f};
+trajectory::Parameter acc_param5 = {.v_max = 1.5e+3f, .a_max = 2.0e+4f, .j_max = 2.5e+5f};
 trajectory::Parameters acc_params = {.run1 = acc_param1, .run2 = acc_param2, .run3 = acc_param3, .run4 = acc_param4, .run5 = acc_param5};
 
-trajectory::Parameter slalom_param1 = {.v_max = 8.0f * M_PI, .a_max = 30.0f * M_PI, .j_max = 1.0e+3f * M_PI};
-trajectory::Parameter slalom_param2 = {.v_max = 10.0f * M_PI, .a_max = 40.0f * M_PI, .j_max = 1.5e+3f * M_PI};
-trajectory::Parameters slalom_params = {.run1 = slalom_param1, .run2 = slalom_param2, .run3 = slalom_param2, .run4 = slalom_param2, .run5 = slalom_param2};
+trajectory::Parameter slalom_param1 = {.v_max = 2.0f * M_PI, .a_max = 30.0f * M_PI, .j_max = 1.0e+3f * M_PI};
+trajectory::Parameter slalom_param2 = {.v_max = 5.0f * M_PI, .a_max = 40.0f * M_PI, .j_max = 1.5e+3f * M_PI};
+trajectory::Parameter slalom_param3 = {.v_max = 8.0f * M_PI, .a_max = 50.0f * M_PI, .j_max = 1.5e+3f * M_PI};
+trajectory::Parameter slalom_param4 = {.v_max = 12.0f * M_PI, .a_max = 60.0f * M_PI, .j_max = 2.0e+3f * M_PI};
+trajectory::Parameter slalom_param5 = {.v_max = 15.0f * M_PI, .a_max = 70.0f * M_PI, .j_max = 2.5e+3f * M_PI};
+trajectory::Parameters slalom_params = {.run1 = slalom_param1, .run2 = slalom_param2, .run3 = slalom_param3, .run4 = slalom_param4, .run5 = slalom_param5};
 
 trajectory::Slalom slalom(&velocity, &slalom_params);
 trajectory::Acceleration acc(&velocity, &acc_params);
