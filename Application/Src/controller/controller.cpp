@@ -176,8 +176,8 @@ namespace undercarriage
             }
         }
         else
-            // slalom->ResetTrajectory(angle, ref_theta - theta_error);
             slalom->ResetTrajectory(slalom_type_, ref_theta);
+        // slalom->ResetTrajectory(angle, ref_theta - theta_error);
 
         // tracker->SetXi(cur_vel.x);
         mode_ctrl = turn;
@@ -407,6 +407,10 @@ namespace undercarriage
         ref_acc.y = 0.0;
         // if (ENABLE_LOG)
         //     Logger();
+        if (abs(ref_vel.x > 1000))
+            ref_vel.x = 0;
+        if (abs(ref_acc.x > 5000))
+            ref_acc.x = 0;
         u_v = pid->trans_vel->Update(ref_vel.x - cur_vel.x) + (Tp1_v * ref_acc.x + ref_vel.x) / Kp_v;
         // u_v = pid->trans_vel->Update(ref_vel.x - cur_vel.x);
 

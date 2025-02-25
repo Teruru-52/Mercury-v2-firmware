@@ -97,7 +97,7 @@ void Initialize()
         break;
 
     case State::func1: // resume searching (load maze, SEARCHING_NOT_GOAL)
-        trj_mode = 2;
+        trj_mode = 4;
         controller.SetTrajectoryMode(trj_mode);
         search_time = 120;
         state.mode_ = State::search;
@@ -271,7 +271,7 @@ void StateProcess()
     {
         switch (state.mode_)
         {
-        case State::search: // func0, func1
+        case State::search: // func0, func1, func2
             controller.StartMove();
             flag_start_cnt = true;
             MazeSearch();
@@ -286,7 +286,7 @@ void StateProcess()
             // state.mode_ = State::run_sequence;
             break;
 
-        case State::State::run_sequence: // func2, func3, func4, func5
+        case State::State::run_sequence: // func3, func4, func5
             TimeAttack();
             // agent.resumeAt(Agent::SEARCHING_REACHED_GOAL, maze, robotPos);
             // trj_mode = 3;
@@ -490,6 +490,7 @@ void MazeSearch()
         wallData = controller.getWallData();
         robotPos = controller.getRobotPosition();
         agent.update(robotPos, wallData);
+
         if (agent.getState() == Agent::FINISHED)
         {
             controller.Acceleration(AccType::stop);
@@ -499,11 +500,7 @@ void MazeSearch()
         }
         else if (prevState == Agent::SEARCHING_NOT_GOAL && agent.getState() == Agent::SEARCHING_REACHED_GOAL)
         {
-            controller.Acceleration(AccType::stop);
-            controller.Brake();
             maze_backup = maze;
-            break;
-            // maze_backup = maze;
             // state.interruption_ = State::not_interrupt;
             // FlashMaze();
             // state.interruption_ = State::interrupt;

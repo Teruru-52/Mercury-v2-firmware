@@ -99,9 +99,9 @@ undercarriage::TrackerBase *tracker = &kanayama;
 // undercarriage::TrackerBase *tracker = &time_varying_feedback;
 
 // translational velocity
-trajectory::Velocity velocity = {.v1 = 200.0f, .v2 = 300.0f, .v3 = 350.0f, .v4 = 400.0f, .v5 = 1000.0f};
+trajectory::Velocity velocity = {.v1 = 2.5e+2f, .v2 = 3.0e+2f, .v3 = 3.5e+2f, .v4 = 4.0e+2f, .v5 = 1.0e+3f};
 
-trajectory::Parameter acc_param1 = {.v_max = 2.0e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
+trajectory::Parameter acc_param1 = {.v_max = 2.5e+2f, .a_max = 1.0e+4f, .j_max = 0.5e+5f};
 trajectory::Parameter acc_param2 = {.v_max = 3.0e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
 trajectory::Parameter acc_param3 = {.v_max = 3.5e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
 trajectory::Parameter acc_param4 = {.v_max = 4.0e+3f, .a_max = 1.5e+4f, .j_max = 2.5e+5f};
