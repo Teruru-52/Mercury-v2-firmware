@@ -10,7 +10,7 @@
 
 namespace hardware {
 class IMU {
-public:
+ public:
   IMU(float sampling_period);
 
   uint8_t read_byte(uint8_t reg);
@@ -26,13 +26,13 @@ public:
   float GetAccX();
   void ResetTheta();
 
-private:
+ private:
   float sampling_period;
   // default
   const float gyro_factor = 16.38f;
   // const float gyro_factor = 16.6f;
   const float acc_factor = -8192.0f;
-  const float g = 9.81f * 1e+3f; // mm/s^2
+  const float g = 9.81f * 1e+3f;  // mm/s^2
 
   float theta;
   float gyro_z;
@@ -41,5 +41,5 @@ private:
   float offset_gz;
   float offset_ax;
 };
-} // namespace hardware
-#endif // HARDWARE_IMU_H_
+}  // namespace hardware
+#endif  // HARDWARE_IMU_H_

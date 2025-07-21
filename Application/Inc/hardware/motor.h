@@ -13,7 +13,7 @@
 
 namespace hardware {
 class Motor {
-private:
+ private:
   //   filter::LowpassFilter filter_voltage{0.001f, 100.0f};
   //   filter::LowpassFilter filter_current_l{0.001f, 100.0f};
   //   filter::LowpassFilter filter_current_r{0.001f, 100.0f};
@@ -28,12 +28,12 @@ private:
   float current_left;
   float current_right;
   const int calibration_rounds = 500;
-  const float sens_coeff = 1000.0f / 264.0f; // [A/V]
+  const float sens_coeff = 1000.0f / 264.0f;  // [A/V]
   float offset_current_left = 0.0f;
   float offset_current_right = 0.0f;
   const float zero_current_output = ADC_REF_VOLTAGE * 0.5f;
 
-public:
+ public:
   // Motor();
 
   void StartDMA();
@@ -47,5 +47,5 @@ public:
   void Free();
   void printLog();
 };
-} // namespace hardware
-#endif //  HARDWARE_MOTOR_H_
+}  // namespace hardware
+#endif  //  HARDWARE_MOTOR_H_

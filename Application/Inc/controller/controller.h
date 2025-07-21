@@ -28,11 +28,11 @@ using namespace hardware;
 
 namespace undercarriage {
 class Controller {
-public:
-  Controller(undercarriage::Odometory *odom, PID_Instances *pid,
-             undercarriage::TrackerBase *tracker, trajectory::Slalom *slalom,
-             trajectory::Acceleration *acc, hardware::IR_Param *ir_param,
-             trajectory::Velocity *velocity);
+ public:
+  Controller(undercarriage::Odometory* odom, PID_Instances* pid,
+             undercarriage::TrackerBase* tracker, trajectory::Slalom* slalom,
+             trajectory::Acceleration* acc, hardware::IR_Param* ir_param,
+             trajectory::Velocity* velocity);
 
   typedef enum {
     forward,
@@ -59,7 +59,7 @@ public:
 
   void UpdateOdometory();
   // void UpdateIMU() { odom->UpdateIMU(); };
-  void SetIRdata(const IR_Value &ir_value);
+  void SetIRdata(const IR_Value& ir_value);
   void SetTrajectoryMode(int trj_mode = 1);
   // void SetBase() { theta_base = cur_pos.th; };
   bool ErrorFlag();
@@ -68,8 +68,8 @@ public:
   void SetStep_Iden();
   void SetPartyTrick();
   void PivotTurn(int angle);
-  void Turn(const SlalomType &slalom_type);
-  void Acceleration(const AccType &acc_type, uint8_t num_square = 1);
+  void Turn(const SlalomType& slalom_type);
+  void Acceleration(const AccType& acc_type, uint8_t num_square = 1);
   void FrontWallCorrection();
   void Back();
   void Wait_ms();
@@ -84,7 +84,7 @@ public:
   void Acceleration();
   void Back(int time);
   void Wait_ms(int time);
-  void FrontWallCorrection(const IR_Value &ir_value);
+  void FrontWallCorrection(const IR_Value& ir_value);
   void BlindAlley();
   void StartMove();
   void Brake();
@@ -100,14 +100,14 @@ public:
   void updateWallData() { ir_wall_value = ir_value_; };
   IR_Value GetIRWall() { return ir_wall_value; };
   Direction getWallData();
-  void UpdatePos(const Direction &dir);
-  void UpdateDir(const Direction &dir) { robot_dir = dir; };
+  void UpdatePos(const Direction& dir);
+  void UpdateDir(const Direction& dir) { robot_dir = dir; };
   IndexVec getRobotPosition() { return robot_position; };
 
   void robotMove();
-  void DirMove(const Direction &dir);
-  void OpMove(const Operation &op);
-  void CalcOpMovedState(const OperationList &runSequence);
+  void DirMove(const Direction& dir);
+  void OpMove(const Operation& op);
+  void CalcOpMovedState(const OperationList& runSequence);
 
   void Logger();
   void LoggerWall();
@@ -119,7 +119,7 @@ public:
   void OutputStepIdenLog() { iden_step.OutputLog(); };
   void MotorTest(float v_left, float v_right);
 
-private:
+ private:
   std::unique_ptr<undercarriage::Odometory> odom;
   hardware::Motor motor;
   std::unique_ptr<PID_Instances> pid;
@@ -140,7 +140,7 @@ private:
   float u_v;
   int ref_size;
 
-  float theta_base = 0.0; // theta_global_ref
+  float theta_base = 0.0;  // theta_global_ref
   float theta_global = 0.0;
   float theta_error = 0.0;
   int angle_turn;
@@ -150,12 +150,12 @@ private:
   SlalomType slalom_type_;
   ctrl::Pose cur_pos{0, 0, 0};
   ctrl::Pose cur_vel{0, 0, 0};
-  ctrl::Pose ref_pos{0, 0, 0}; // absolute coordinates
-  ctrl::Pose ref_vel{0, 0, 0}; // robot coordinates
+  ctrl::Pose ref_pos{0, 0, 0};  // absolute coordinates
+  ctrl::Pose ref_vel{0, 0, 0};  // robot coordinates
   ctrl::Pose ref_vel_ctrl{0, 0, 0};
-  ctrl::Pose ref_acc{0, 0, 0}; // robot coordinates
+  ctrl::Pose ref_acc{0, 0, 0};  // robot coordinates
   float acc_x;
-  const float acc_x_err = 40.0 * 1e+3; // error threshold
+  const float acc_x_err = 40.0 * 1e+3;  // error threshold
 
   const float Tp1_w = 31.83;
   const float Kp_w = 144.2 * 1e+3;
@@ -229,16 +229,16 @@ private:
   IndexVec robot_position = {0, 0};
   Direction robot_dir = NORTH;
 
-  const int back_time = 700;       // ms
-  const int correction_time = 700; // ms
-  const int wait_time = 200;       // ms
+  const int back_time = 700;        // ms
+  const int correction_time = 700;  // ms
+  const int wait_time = 200;        // ms
   int cnt_blind_alley = 0;
   int cnt_can_back = 0;
   int cnt_time = 0;
 
   bool flag_ctrl = false;
   bool flag_slalom;
-  bool flag_wall = false; // flag for sensors reading wall
+  bool flag_wall = false;  // flag for sensors reading wall
   bool flag_wall_sl = true;
   bool flag_wall_sr = true;
   bool flag_wall_front = false;
@@ -266,6 +266,6 @@ private:
   float log_u_w[BUFFER_SIZE];
   float log_x_diff[10];
 };
-} // namespace undercarriage
+}  // namespace undercarriage
 
-#endif //  CONTROLLER_H_
+#endif  //  CONTROLLER_H_

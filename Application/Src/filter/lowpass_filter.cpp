@@ -4,6 +4,7 @@
  */
 
 #include "filter/lowpass_filter.h"
+
 #include "filter/filter_base.h"
 
 namespace filter {
@@ -23,4 +24,4 @@ void LowpassFilter::Reset() {
   pre_value_ = 0.0f;
   value_ = 0.0f;
 }
-} // namespace filter
+}  // namespace filter

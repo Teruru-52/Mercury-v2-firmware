@@ -12,83 +12,71 @@
 #define PULSE_DIFF 2048
 #define PULSE_HALF 16384
 
-class State
-{
-public:
-    typedef enum
-    {
-        not_selected,
-        func0,
-        func1,
-        func2,
-        func3,
-        func4,
-        func5,
-        func6,
-        func7,
-        func8,
-        func9,
-        func10,
-        func11,
-        func12,
-        func13,
-        func14,
-        func15
-    } Function;
+class State {
+ public:
+  typedef enum {
+    not_selected,
+    func0,
+    func1,
+    func2,
+    func3,
+    func4,
+    func5,
+    func6,
+    func7,
+    func8,
+    func9,
+    func10,
+    func11,
+    func12,
+    func13,
+    func14,
+    func15
+  } Function;
 
-    typedef enum
-    {
-        load,
-        not_load
-    } MazeLoad;
+  typedef enum { load, not_load } MazeLoad;
 
-    typedef enum
-    {
-        interrupt,
-        not_interrupt
-    } Interruption;
+  typedef enum { interrupt, not_interrupt } Interruption;
 
-    typedef enum
-    {
-        select_function,
-        search,
-        run_sequence,
-        output,
-        test_ir,
-        test_odometory,
-        test_rotation,
-        test_translation2,
-        test_translation1,
-        test_slalom1,
-        test_slalom2,
-        m_identification,
-        step_identification,
-        party_trick,
-        // error
-    } Mode;
+  typedef enum {
+    select_function,
+    search,
+    run_sequence,
+    output,
+    test_ir,
+    test_odometory,
+    test_rotation,
+    test_translation2,
+    test_translation1,
+    test_slalom1,
+    test_slalom2,
+    m_identification,
+    step_identification,
+    party_trick,
+    // error
+  } Mode;
 
-    typedef enum
-    {
-        slalom,
-        m_iden,
-        step_iden,
-        pivot_turn,
-        translation,
-        maze,
-    } Log;
+  typedef enum {
+    slalom,
+    m_iden,
+    step_iden,
+    pivot_turn,
+    translation,
+    maze,
+  } Log;
 
-    Function func_;
-    MazeLoad mazeload_;
-    Interruption interruption_;
-    Mode mode_;
-    Log log_;
+  Function func_;
+  MazeLoad mazeload_;
+  Interruption interruption_;
+  Mode mode_;
+  Log log_;
 
-    State();
-    void SelectFunction(int16_t pulse);
-    void SelectLoadMaze(int16_t pulse);
+  State();
+  void SelectFunction(int16_t pulse);
+  void SelectLoadMaze(int16_t pulse);
 
-private:
-    Function pre_func_ = not_selected;
+ private:
+  Function pre_func_ = not_selected;
 };
 
 #endif /* _STATE_H_ */

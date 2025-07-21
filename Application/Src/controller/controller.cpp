@@ -6,14 +6,20 @@
 #include "controller/controller.h"
 
 namespace undercarriage {
-Controller::Controller(undercarriage::Odometory *odom, PID_Instances *pid,
-                       undercarriage::TrackerBase *tracker,
-                       trajectory::Slalom *slalom,
-                       trajectory::Acceleration *acc,
-                       hardware::IR_Param *ir_param,
-                       trajectory::Velocity *velocity)
-    : odom(odom), pid(pid), tracker(tracker), slalom(slalom), acc(acc),
-      mode_ctrl(stop), ir_param(ir_param), velocity(velocity) {
+Controller::Controller(undercarriage::Odometory* odom, PID_Instances* pid,
+                       undercarriage::TrackerBase* tracker,
+                       trajectory::Slalom* slalom,
+                       trajectory::Acceleration* acc,
+                       hardware::IR_Param* ir_param,
+                       trajectory::Velocity* velocity)
+    : odom(odom),
+      pid(pid),
+      tracker(tracker),
+      slalom(slalom),
+      acc(acc),
+      mode_ctrl(stop),
+      ir_param(ir_param),
+      velocity(velocity) {
   if (ENABLE_LOG) {
     ref_size = slalom->GetRefSize();
     // ref_size = acc->GetRefSize();
@@ -32,14 +38,14 @@ void Controller::UpdateOdometory() {
   acc_x = odom->GetAccX();
 }
 
-void Controller::SetIRdata(const IR_Value &ir_value) {
+void Controller::SetIRdata(const IR_Value& ir_value) {
   ir_value_ = ir_value;
   if (slalom->GetWallFlag() || acc->GetWallFlag()) {
     updateWallData();
     slalom->ResetWallFlag();
     acc->ResetWallFlag();
-    flag_wall = true; // read wall
-                      // speaker.ToggleSpeaker();
+    flag_wall = true;  // read wall
+                       // speaker.ToggleSpeaker();
   }
 }
 
@@ -49,8 +55,7 @@ void Controller::SetTrajectoryMode(int trj_mode) {
 }
 
 bool Controller::ErrorFlag() {
-  if (acc_x < -acc_x_err)
-    flag_safety = true;
+  if (acc_x < -acc_x_err) flag_safety = true;
   return flag_safety;
 }
 
@@ -76,8 +81,7 @@ void Controller::SetStep_Iden() {
 
 void Controller::SetPartyTrick() {
   mode_ctrl = party_trick;
-  while (1) {
-  }
+  while (1) {}
 }
 
 void Controller::PivotTurn(int angle) {
@@ -104,41 +108,40 @@ void Controller::PivotTurn(int angle) {
   Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_RESET);
 }
 
-void Controller::Turn(const SlalomType &slalom_type) {
+void Controller::Turn(const SlalomType& slalom_type) {
   slalom_type_ = slalom_type;
   switch (slalom_type_) {
-  case SlalomType::left_90:
-    ref_theta = M_PI * 0.5f;
-    Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
-    break;
-  case SlalomType::right_90:
-    ref_theta = -M_PI * 0.5f;
-    Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
-    break;
-  case SlalomType::left_45:
-    ref_theta = M_PI * 0.25f;
-    Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
-    break;
-  case SlalomType::right_45:
-    ref_theta = -M_PI * 0.25f;
-    Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
-    break;
-  default:
-    ref_theta = 0.0;
-    break;
+    case SlalomType::left_90:
+      ref_theta = M_PI * 0.5f;
+      Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
+      break;
+    case SlalomType::right_90:
+      ref_theta = -M_PI * 0.5f;
+      Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
+      break;
+    case SlalomType::left_45:
+      ref_theta = M_PI * 0.25f;
+      Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
+      break;
+    case SlalomType::right_45:
+      ref_theta = -M_PI * 0.25f;
+      Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
+      break;
+    default:
+      ref_theta = 0.0;
+      break;
   }
 
-  if (flag_wall_front && ENABLE_SLALOM_CORRECTION) // 前壁があれば前壁補正
+  if (flag_wall_front && ENABLE_SLALOM_CORRECTION)  // 前壁があれば前壁補正
   {
-    if (!flag_slalom) // 前壁があり，slalomが始まっていなければ前壁補正
+    if (!flag_slalom)  // 前壁があり，slalomが始まっていなければ前壁補正
     {
       // Write_GPIO(LED_RED, G?PIO_PIN_SET);
       Toggle_GPIO(LED_RED);
       // float ir_fmean = (ir_value_.fl3 + ir_value_.fr3) * 0.5f;
       float ir_fmean = ir_value_.fr3;
       x_diff = GetFrontWallPos(ir_fmean);
-      if (ENABLE_LOG)
-        LoggerWall();
+      if (ENABLE_LOG) LoggerWall();
       flag_slalom = true;
       slalom->ResetTrajectory(slalom_type_, ref_theta, x_diff);
     }
@@ -162,11 +165,10 @@ void Controller::Turn(const SlalomType &slalom_type) {
   Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_RESET);
 }
 
-void Controller::Acceleration(const AccType &acc_type, uint8_t num_square) {
+void Controller::Acceleration(const AccType& acc_type, uint8_t num_square) {
   acc->ResetTrajectory(acc_type, cur_vel.x, num_square);
   mode_ctrl = acc_curve;
-  if (acc_type == AccType::forward)
-    flag_side_correct = true;
+  if (acc_type == AccType::forward) flag_side_correct = true;
   while (1) {
     if (flag_ctrl) {
       theta_error += -cur_pos.th;
@@ -251,8 +253,7 @@ void Controller::SideWallCorrection() {
       error_fl = ir_param->ctrl_base.fl2 - static_cast<float>(ir_value_.fl2);
     else
       error_fl = 0.0;
-    if (ir_value_.fr2 < ir_param->is_wall.fr2)
-      error_fl *= 1.8;
+    if (ir_value_.fr2 < ir_param->is_wall.fr2) error_fl *= 1.8;
   } else
     error_fl = 0;
 
@@ -261,8 +262,7 @@ void Controller::SideWallCorrection() {
       error_fr = ir_param->ctrl_base.fr2 - static_cast<float>(ir_value_.fr2);
     else
       error_fr = 0.0;
-    if (ir_value_.fl2 < ir_param->is_wall.fl2)
-      error_fr *= 1.8;
+    if (ir_value_.fl2 < ir_param->is_wall.fl2) error_fr *= 1.8;
   } else
     error_fr = 0;
 }
@@ -304,7 +304,7 @@ float Controller::GetFrontWallPos(float ir_fmean) {
   //     return ir_param->log.a * log(1e-10) + ir_param->log.d;
 
   // table reference
-  auto compareDistance = [ir_fmean](const xy_pair &a, const xy_pair &b) {
+  auto compareDistance = [ir_fmean](const xy_pair& a, const xy_pair& b) {
     return std::abs(a.first - ir_fmean) < std::abs(b.first - ir_fmean);
   };
   auto nearestIterator =
@@ -323,15 +323,14 @@ void Controller::Turn() {
   // u_v = pid->trans_vel->Update(ref_vel_ctrl.x - cur_vel.x); // without
   // feedforward
   u_v = pid->trans_vel->Update(ref_vel_ctrl.x - cur_vel.x) +
-        ref_vel_ctrl.x / Kp_v; // with feedforward
+        ref_vel_ctrl.x / Kp_v;  // with feedforward
   u_w = pid->rot_vel->Update(ref_vel_ctrl.th - cur_vel.th) +
         ref_vel_ctrl.th / Kp_w;
 
   InputVelocity(u_v, u_w);
   // if (ENABLE_LOG)
   //     Logger();
-  if (slalom->Finished())
-    flag_ctrl = true;
+  if (slalom->Finished()) flag_ctrl = true;
 }
 
 void Controller::Acceleration() {
@@ -345,10 +344,8 @@ void Controller::Acceleration() {
   ref_acc.y = 0.0;
   // if (ENABLE_LOG)
   //     Logger();
-  if (abs(ref_vel.x > 1000))
-    ref_vel.x = 0;
-  if (abs(ref_acc.x > 5000))
-    ref_acc.x = 0;
+  if (abs(ref_vel.x > 1000)) ref_vel.x = 0;
+  if (abs(ref_acc.x > 5000)) ref_acc.x = 0;
   u_v = pid->trans_vel->Update(ref_vel.x - cur_vel.x) +
         (Tp1_v * ref_acc.x + ref_vel.x) / Kp_v;
   // u_v = pid->trans_vel->Update(ref_vel.x - cur_vel.x);
@@ -361,8 +358,7 @@ void Controller::Acceleration() {
     u_w = pid->angle->Update(theta_base - theta_global);
 
   InputVelocity(u_v, u_w);
-  if (acc->Finished())
-    flag_ctrl = true;
+  if (acc->Finished()) flag_ctrl = true;
 }
 
 void Controller::Back(int time) {
@@ -384,7 +380,7 @@ void Controller::Wait_ms(int time) {
     flag_ctrl = true;
 }
 
-void Controller::FrontWallCorrection(const IR_Value &ir_value) {
+void Controller::FrontWallCorrection(const IR_Value& ir_value) {
   if (cnt_time < correction_time) {
     float error_left =
         ir_param->ctrl_base.fl3 - static_cast<float>(ir_value_.fl3);
@@ -411,8 +407,7 @@ void Controller::BlindAlley() {
     while (1) {
       Write_GPIO(LED_TALE_LEFT, GPIO_PIN_SET);
       Write_GPIO(LED_TALE_RIGHT, GPIO_PIN_SET);
-      if (!flag_maze_flash)
-        break;
+      if (!flag_maze_flash) break;
     }
     cnt_blind_alley = 0;
   }
@@ -500,7 +495,7 @@ Direction Controller::getWallData() {
   return wall;
 }
 
-void Controller::UpdatePos(const Direction &dir) {
+void Controller::UpdatePos(const Direction& dir) {
   if (NORTH == dir.byte)
     robot_position += IndexVec::vecNorth;
   else if (SOUTH == dir.byte)
@@ -513,67 +508,64 @@ void Controller::UpdatePos(const Direction &dir) {
 
 void Controller::robotMove() {
   switch (mode_ctrl) {
-  case acc_curve:
-    Acceleration();
-    break;
-  case turn:
-    Turn();
-    break;
-  case pivot_turn_right_90:
-    PivotTurn();
-    break;
-  case pivot_turn_left_90:
-    PivotTurn();
-    break;
-  case pivot_turn_180:
-    PivotTurn();
-    break;
-  case front_wall_correction:
-    FrontWallCorrection(ir_value_);
-    break;
-  case back:
-    Back(back_time);
-    break;
-  case m_iden:
-    M_Iden();
-    break;
-  case step_iden:
-    Step_Iden();
-    break;
-  case party_trick:
-    PartyTrick();
-    break;
-  case stop:
-    Brake();
-    break;
-  case wait:
-    Wait_ms(wait_time);
-    break;
-  default:
-    break;
+    case acc_curve:
+      Acceleration();
+      break;
+    case turn:
+      Turn();
+      break;
+    case pivot_turn_right_90:
+      PivotTurn();
+      break;
+    case pivot_turn_left_90:
+      PivotTurn();
+      break;
+    case pivot_turn_180:
+      PivotTurn();
+      break;
+    case front_wall_correction:
+      FrontWallCorrection(ir_value_);
+      break;
+    case back:
+      Back(back_time);
+      break;
+    case m_iden:
+      M_Iden();
+      break;
+    case step_iden:
+      Step_Iden();
+      break;
+    case party_trick:
+      PartyTrick();
+      break;
+    case stop:
+      Brake();
+      break;
+    case wait:
+      Wait_ms(wait_time);
+      break;
+    default:
+      break;
   }
 }
 
-void Controller::DirMove(const Direction &dir) {
+void Controller::DirMove(const Direction& dir) {
   int8_t robot_dir_index = 0;
   while (1) {
-    if (robot_dir.byte == NORTH << robot_dir_index)
-      break;
+    if (robot_dir.byte == NORTH << robot_dir_index) break;
     robot_dir_index++;
   }
 
   int8_t next_dir_index = 0;
   while (1) {
-    if (dir.byte == NORTH << next_dir_index)
-      break;
+    if (dir.byte == NORTH << next_dir_index) break;
     next_dir_index++;
   }
 
   dir_diff = next_dir_index - robot_dir_index;
   // printf("dir_diff = %d\n", dir_diff);
   // Straight Line
-  if (dir_diff == 0)
-    Acceleration(AccType::forward, 1);
+  if (dir_diff == 0) Acceleration(AccType::forward, 1);
   // Turn Right
   else if (dir_diff == 1 || dir_diff == -3) {
     if (ENABLE_SLALOM)
@@ -584,8 +576,7 @@ void Controller::DirMove(const Direction &dir) {
           ir_value_.fr3 > ir_param->is_wall.fr3)
         FrontWallCorrection();
       PivotTurn(-90);
-      if (prev_wall_cnt == 2)
-        cnt_can_back++;
+      if (prev_wall_cnt == 2) cnt_can_back++;
       if (cnt_can_back >= CNT_BACK && flag_wall_front && flag_wall_sl) {
         Back();
         Acceleration(AccType::start);
@@ -604,8 +595,7 @@ void Controller::DirMove(const Direction &dir) {
           ir_value_.fr3 > ir_param->is_wall.fr3)
         FrontWallCorrection();
       PivotTurn(90);
-      if (prev_wall_cnt == 2)
-        cnt_can_back++;
+      if (prev_wall_cnt == 2) cnt_can_back++;
       if (cnt_can_back >= CNT_BACK && flag_wall_front && flag_wall_sl) {
         Back();
         Acceleration(AccType::start);
@@ -616,7 +606,7 @@ void Controller::DirMove(const Direction &dir) {
   }
   // U-Turn
   else {
-    if (prev_wall_cnt == 3) // Blind Alley
+    if (prev_wall_cnt == 3)  // Blind Alley
     {
       cnt_blind_alley++;
       BlindAlley();
@@ -628,108 +618,108 @@ void Controller::DirMove(const Direction &dir) {
   }
 }
 
-void Controller::OpMove(const Operation &op) {
+void Controller::OpMove(const Operation& op) {
   switch (op.op) {
-  case Operation::START:
-    StartMove();
-    break;
-  case Operation::FORWARD:
-    flag_side_correct = true;
-    Acceleration(AccType::forward, op.n);
-    break;
+    case Operation::START:
+      StartMove();
+      break;
+    case Operation::FORWARD:
+      flag_side_correct = true;
+      Acceleration(AccType::forward, op.n);
+      break;
 
-  case Operation::TURN_LEFT90:
-    if (ENABLE_SLALOM)
-      Turn(SlalomType::left_90);
-    else {
+    case Operation::TURN_LEFT90:
+      if (ENABLE_SLALOM)
+        Turn(SlalomType::left_90);
+      else {
+        Acceleration(AccType::stop);
+        if (ir_value_.fl3 > ir_param->is_wall.fl3 &&
+            ir_value_.fr3 > ir_param->is_wall.fr3)
+          FrontWallCorrection();
+        PivotTurn(90);
+        Acceleration(AccType::start_half);
+      }
+      break;
+
+    case Operation::TURN_RIGHT90:
+      if (ENABLE_SLALOM)
+        Turn(SlalomType::right_90);
+      else {
+        Acceleration(AccType::stop);
+        if (ir_value_.fl3 > ir_param->is_wall.fl3 &&
+            ir_value_.fr3 > ir_param->is_wall.fr3)
+          FrontWallCorrection();
+        PivotTurn(-90);
+        Acceleration(AccType::start_half);
+      }
+      break;
+
+    case Operation::TURN_LEFT45:  // only for slalom
+      Turn(SlalomType::left_45);
+      break;
+
+    case Operation::TURN_RIGHT45:  // only for slalom
+      Turn(SlalomType::right_45);
+
+    case Operation::STOP:
       Acceleration(AccType::stop);
-      if (ir_value_.fl3 > ir_param->is_wall.fl3 &&
-          ir_value_.fr3 > ir_param->is_wall.fr3)
-        FrontWallCorrection();
-      PivotTurn(90);
-      Acceleration(AccType::start_half);
-    }
-    break;
-
-  case Operation::TURN_RIGHT90:
-    if (ENABLE_SLALOM)
-      Turn(SlalomType::right_90);
-    else {
-      Acceleration(AccType::stop);
-      if (ir_value_.fl3 > ir_param->is_wall.fl3 &&
-          ir_value_.fr3 > ir_param->is_wall.fr3)
-        FrontWallCorrection();
-      PivotTurn(-90);
-      Acceleration(AccType::start_half);
-    }
-    break;
-
-  case Operation::TURN_LEFT45: // only for slalom
-    Turn(SlalomType::left_45);
-    break;
-
-  case Operation::TURN_RIGHT45: // only for slalom
-    Turn(SlalomType::right_45);
-
-  case Operation::STOP:
-    Acceleration(AccType::stop);
-    Brake();
-    break;
-  default:
-    break;
+      Brake();
+      break;
+    default:
+      break;
   }
 }
 
-void Controller::CalcOpMovedState(const OperationList &runSequence) {
+void Controller::CalcOpMovedState(const OperationList& runSequence) {
   robot_position = IndexVec(0, 0);
   robot_dir = NORTH;
   for (size_t i = 0; i < runSequence.size(); i++) {
     switch (runSequence[i].op) {
-    case Operation::START:
-      robot_position = IndexVec::vecNorth;
-      break;
-    case Operation::FORWARD:
-      if (robot_dir.byte == NORTH)
-        robot_position += IndexVec::vecNorth;
-      else if (robot_dir.byte == EAST)
-        robot_position += IndexVec::vecEast;
-      else if (robot_dir.byte == SOUTH)
-        robot_position += IndexVec::vecSouth;
-      else if (robot_dir.byte == WEST)
-        robot_position += IndexVec::vecWest;
-      break;
-    case Operation::TURN_LEFT90:
-      if (robot_dir.byte == NORTH) {
-        robot_position += IndexVec::vecWest;
-        robot_dir.byte = WEST;
-      } else if (robot_dir.byte == EAST) {
-        robot_position += IndexVec::vecNorth;
-        robot_dir.byte = NORTH;
-      } else if (robot_dir.byte == SOUTH) {
-        robot_position += IndexVec::vecEast;
-        robot_dir.byte = EAST;
-      } else if (robot_dir.byte == WEST) {
-        robot_position += IndexVec::vecSouth;
-        robot_dir.byte = SOUTH;
-      }
-      break;
-    case Operation::TURN_RIGHT90:
-      if (robot_dir.byte == NORTH) {
-        robot_position += IndexVec::vecEast;
-        robot_dir.byte = EAST;
-      } else if (robot_dir.byte == EAST) {
-        robot_position += IndexVec::vecSouth;
-        robot_dir.byte = SOUTH;
-      } else if (robot_dir.byte == SOUTH) {
-        robot_position += IndexVec::vecWest;
-        robot_dir.byte = WEST;
-      } else if (robot_dir.byte == WEST) {
-        robot_position += IndexVec::vecNorth;
-        robot_dir.byte = NORTH;
-      }
-      break;
-    default:
-      break;
+      case Operation::START:
+        robot_position = IndexVec::vecNorth;
+        break;
+      case Operation::FORWARD:
+        if (robot_dir.byte == NORTH)
+          robot_position += IndexVec::vecNorth;
+        else if (robot_dir.byte == EAST)
+          robot_position += IndexVec::vecEast;
+        else if (robot_dir.byte == SOUTH)
+          robot_position += IndexVec::vecSouth;
+        else if (robot_dir.byte == WEST)
+          robot_position += IndexVec::vecWest;
+        break;
+      case Operation::TURN_LEFT90:
+        if (robot_dir.byte == NORTH) {
+          robot_position += IndexVec::vecWest;
+          robot_dir.byte = WEST;
+        } else if (robot_dir.byte == EAST) {
+          robot_position += IndexVec::vecNorth;
+          robot_dir.byte = NORTH;
+        } else if (robot_dir.byte == SOUTH) {
+          robot_position += IndexVec::vecEast;
+          robot_dir.byte = EAST;
+        } else if (robot_dir.byte == WEST) {
+          robot_position += IndexVec::vecSouth;
+          robot_dir.byte = SOUTH;
+        }
+        break;
+      case Operation::TURN_RIGHT90:
+        if (robot_dir.byte == NORTH) {
+          robot_position += IndexVec::vecEast;
+          robot_dir.byte = EAST;
+        } else if (robot_dir.byte == EAST) {
+          robot_position += IndexVec::vecSouth;
+          robot_dir.byte = SOUTH;
+        } else if (robot_dir.byte == SOUTH) {
+          robot_position += IndexVec::vecWest;
+          robot_dir.byte = WEST;
+        } else if (robot_dir.byte == WEST) {
+          robot_position += IndexVec::vecNorth;
+          robot_dir.byte = NORTH;
+        }
+        break;
+      default:
+        break;
     }
   }
   // printf("IndexVec(%d, %d)\n", robot_position.x, robot_position.y);
@@ -772,8 +762,7 @@ void Controller::LoggerWall() {
   static int cnt_wall = 0;
   log_x_diff[cnt_wall] = x_diff;
   cnt_wall++;
-  if (cnt_wall >= 10)
-    cnt_wall = 0;
+  if (cnt_wall >= 10) cnt_wall = 0;
 }
 
 void Controller::OutputLog() {
@@ -815,7 +804,7 @@ void Controller::OutputTranslationLog() {
 }
 
 void Controller::MotorTest(float v_left, float v_right) {
-  motor.Drive(v_left, v_right); // voltage [V]
-                                // motor.Free();
+  motor.Drive(v_left, v_right);  // voltage [V]
+                                 // motor.Free();
 }
-} // namespace undercarriage
+}  // namespace undercarriage

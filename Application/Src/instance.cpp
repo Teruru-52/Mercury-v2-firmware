@@ -40,7 +40,7 @@ const float ir_fl3_base = 3200;
 const float ir_fr1_base = 3650;
 const float ir_fr2_base = 3050;
 const float ir_fr3_base = 2900;
-const float ir_slalom = 2420; // front wall correction (slalom)
+const float ir_slalom = 2420;  // front wall correction (slalom)
 
 // Contest
 // const float ir_fl1_wall = 2150;
@@ -97,7 +97,7 @@ PID_Instances pid(&pid_angle, &pid_rotational_vel, &pid_traslational_vel,
 undercarriage::Kanayama kanayama(3.0f, 3.0e-6f, 1.5e-3f);
 undercarriage::DynamicFeedback dynamic_feedback(10.0f, 0.5f, control_period);
 undercarriage::TimeVaryingFeedback time_varying_feedback(1.0f, 1e-3f);
-undercarriage::TrackerBase *tracker = &kanayama;
+undercarriage::TrackerBase* tracker = &kanayama;
 // undercarriage::TrackerBase *tracker = &dynamic_feedback;
 // undercarriage::TrackerBase *tracker = &time_varying_feedback;
 

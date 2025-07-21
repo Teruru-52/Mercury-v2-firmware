@@ -19,7 +19,10 @@
 
 namespace hardware {
 IMU::IMU(float sampling_period)
-    : sampling_period(sampling_period), theta(0), pre_gyro_z(0), offset_gz(0),
+    : sampling_period(sampling_period),
+      theta(0),
+      pre_gyro_z(0),
+      offset_gz(0),
       offset_ax(0) {}
 
 uint8_t IMU::read_byte(uint8_t reg) {
@@ -27,7 +30,7 @@ uint8_t IMU::read_byte(uint8_t reg) {
   uint8_t tx_data[2];
 
   tx_data[0] = reg | 0x80;
-  tx_data[1] = 0x00; // dummy
+  tx_data[1] = 0x00;  // dummy
 
   Write_GPIO(SPI1_CS, GPIO_PIN_RESET);
   // HAL_SPI_TransmitReceive_IT(&hspi1, tx_data, rx_data, 2);
@@ -43,7 +46,7 @@ void IMU::write_byte(uint8_t reg, uint8_t data) {
 
   tx_data[0] = reg & 0x7F;
   //   tx_data[0] = reg | 0x00;
-  tx_data[1] = data; // write data
+  tx_data[1] = data;  // write data
 
   Write_GPIO(SPI1_CS, GPIO_PIN_RESET);
   // HAL_SPI_TransmitReceive_IT(&hspi1, tx_data, rx_data, 2);
@@ -54,11 +57,12 @@ void IMU::write_byte(uint8_t reg, uint8_t data) {
 void IMU::Initialize() {
   uint8_t who_am_i;
   Write_GPIO(SPI1_CS, GPIO_PIN_SET);
-  __HAL_SPI_ENABLE(&hspi1); // clockが動かないように、あらかじめEnableにしておく
+  __HAL_SPI_ENABLE(
+      &hspi1);  // clockが動かないように、あらかじめEnableにしておく
   // __HAL_SPI_ENABLE_IT(&hspi1, SPI_IT_TXE | SPI_IT_RXNE);
 
-  HAL_Delay(10);                      // wait start up
-  who_am_i = read_byte(SPI_WHO_AM_I); // read who am i
+  HAL_Delay(10);                       // wait start up
+  who_am_i = read_byte(SPI_WHO_AM_I);  // read who am i
   // printf("who_am_i = 0x%x\r\n", who_am_i); // check who am i value
   HAL_Delay(10);
   while (who_am_i != 0x12) {
@@ -70,13 +74,13 @@ void IMU::Initialize() {
   // HAL_Delay(1);
   // write_byte(SPI_POWER_MANAGEMENT_1, 0x80);
   HAL_Delay(1);
-  write_byte(SPI_POWER_MANAGEMENT_1, 0x00); // set pwr_might (20MHz)
+  write_byte(SPI_POWER_MANAGEMENT_1, 0x00);  // set pwr_might (20MHz)
   HAL_Delay(1);
-  write_byte(SPI_CONFIG, 0x00); // set config (FSYNCはNC)
+  write_byte(SPI_CONFIG, 0x00);  // set config (FSYNCはNC)
   HAL_Delay(1);
-  write_byte(SPI_GYRO_CONFIG, 0x18); // set gyro config (2000dps)
+  write_byte(SPI_GYRO_CONFIG, 0x18);  // set gyro config (2000dps)
   HAL_Delay(1);
-  write_byte(SPI_ACCEL_CONFIG, 0x08); // set acc config (4g)
+  write_byte(SPI_ACCEL_CONFIG, 0x08);  // set acc config (4g)
   HAL_Delay(1);
   // write_byte(0x1D, 0x00); // LPF (Accelerometer, Bandwidth460 Hz)
   // HAL_Delay(1);
@@ -90,7 +94,7 @@ void IMU::CalcOffset() {
     // H:8bit shift, Link h and l
     gz_raw = (int16_t)((int16_t)(read_byte(SPI_GYRO_ZOUT_H) << 8) |
                        read_byte(SPI_GYRO_ZOUT_L));
-    gyro_z = (float)(gz_raw) / gyro_factor * M_PI / 180.0f; // dps to rad/sec
+    gyro_z = (float)(gz_raw) / gyro_factor * M_PI / 180.0f;  // dps to rad/sec
 
     gz_sum += gyro_z;
     HAL_Delay(1);
@@ -128,7 +132,7 @@ void IMU::UpdateGyro() {
   gz_raw = (int16_t)((int16_t)(read_byte(SPI_GYRO_ZOUT_H) << 8) |
                      read_byte(SPI_GYRO_ZOUT_L));
   gyro_z = (float)(gz_raw) / gyro_factor * M_PI / 180.0f -
-           offset_gz; // dps to deg/sec
+           offset_gz;  // dps to deg/sec
 }
 
 void IMU::UpdateAcc() {
@@ -156,4 +160,4 @@ float IMU::GetAccX() { return acc_x * g; }
 
 void IMU::ResetTheta() { theta = 0.0; }
 
-} // namespace hardware
+}  // namespace hardware

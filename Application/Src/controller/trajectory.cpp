@@ -14,57 +14,57 @@ void OnlineTrajectoryBase::Reset() {
 }
 
 // Slalom
-void Slalom::ResetTrajectory(const SlalomType &slalom_type, float ref_theta,
+void Slalom::ResetTrajectory(const SlalomType& slalom_type, float ref_theta,
                              float x_diff) {
   slalom_type_ = slalom_type;
   state.q.x = state.q.y = 0;
   switch (trj_mode_) {
-  case 1:
-    v_ref = velocity->v1;
-    param = params->run1;
-    break;
-  case 2:
-    v_ref = velocity->v2;
-    param = params->run2;
-    break;
-  case 3:
-    v_ref = velocity->v3;
-    param = params->run3;
-    break;
-  case 4:
-    v_ref = velocity->v4;
-    param = params->run4;
-    break;
-  case 5:
-    v_ref = velocity->v5;
-    param = params->run5;
-    break;
-  default:
-    break;
+    case 1:
+      v_ref = velocity->v1;
+      param = params->run1;
+      break;
+    case 2:
+      v_ref = velocity->v2;
+      param = params->run2;
+      break;
+    case 3:
+      v_ref = velocity->v3;
+      param = params->run3;
+      break;
+    case 4:
+      v_ref = velocity->v4;
+      param = params->run4;
+      break;
+    case 5:
+      v_ref = velocity->v5;
+      param = params->run5;
+      break;
+    default:
+      break;
   }
   switch (slalom_type_) {
-  case left_90:
-    ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90.0f, ref_theta),
-                             90.0f, 0, param.j_max, param.a_max, param.v_max);
-    // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 90, 0,
-    // param.j_max, param.a_max, param.v_max);
-    flag_mirror = false;
-    break;
-  case right_90:
-    ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90.0f, -ref_theta),
-                             90.0f, 0, param.j_max, param.a_max, param.v_max);
-    // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, -ref_theta), 90, 0,
-    // param.j_max, param.a_max, param.v_max);
-    flag_mirror = true;
-    break;
-  // case left_45:
-  //     ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 90, 0,
-  //     param.j_max, param.a_max, param.v_max); flag_mirror = false; break;
-  // case right_45:
-  //     ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, -ref_theta), 20, 0,
-  //     param.j_max, param.a_max, param.v_max); flag_mirror = true; break;
-  default:
-    break;
+    case left_90:
+      ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90.0f, ref_theta),
+                               90.0f, 0, param.j_max, param.a_max, param.v_max);
+      // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 90, 0,
+      // param.j_max, param.a_max, param.v_max);
+      flag_mirror = false;
+      break;
+    case right_90:
+      ss = ctrl::slalom::Shape(ctrl::Pose(90.0f - x_diff, 90.0f, -ref_theta),
+                               90.0f, 0, param.j_max, param.a_max, param.v_max);
+      // ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, -ref_theta), 90, 0,
+      // param.j_max, param.a_max, param.v_max);
+      flag_mirror = true;
+      break;
+    // case left_45:
+    //     ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, ref_theta), 90, 0,
+    //     param.j_max, param.a_max, param.v_max); flag_mirror = false; break;
+    // case right_45:
+    //     ss = ctrl::slalom::Shape(ctrl::Pose(90, 90, -ref_theta), 20, 0,
+    //     param.j_max, param.a_max, param.v_max); flag_mirror = true; break;
+    default:
+      break;
   }
 
   st = ctrl::slalom::Trajectory(ss, flag_mirror);
@@ -96,55 +96,55 @@ void Slalom::UpdateRef() {
 }
 
 // Acceleration
-void Acceleration::ResetTrajectory(const AccType &acc_type, float cur_vel,
+void Acceleration::ResetTrajectory(const AccType& acc_type, float cur_vel,
                                    uint8_t num_square) {
   this->acc_type = acc_type;
   switch (trj_mode_) {
-  case 1:
-    v_ref = velocity->v1;
-    param = params->run1;
-    break;
-  case 2:
-    v_ref = velocity->v2;
-    param = params->run2;
-    break;
-  case 3:
-    v_ref = velocity->v3;
-    param = params->run3;
-    break;
-  case 4:
-    v_ref = velocity->v4;
-    param = params->run4;
-    break;
-  case 5:
-    v_ref = velocity->v5;
-    param = params->run5;
-    break;
-  default:
-    break;
+    case 1:
+      v_ref = velocity->v1;
+      param = params->run1;
+      break;
+    case 2:
+      v_ref = velocity->v2;
+      param = params->run2;
+      break;
+    case 3:
+      v_ref = velocity->v3;
+      param = params->run3;
+      break;
+    case 4:
+      v_ref = velocity->v4;
+      param = params->run4;
+      break;
+    case 5:
+      v_ref = velocity->v5;
+      param = params->run5;
+      break;
+    default:
+      break;
   }
   switch (acc_type) {
-  case start:
-    ad.reset(param.j_max, param.a_max, param.v_max, 0, v_ref,
-             FORWARD_LENGTH_START, 0, 0);
-    break;
-  case start_half:
-    ad.reset(param.j_max, param.a_max, param.v_max, 0, v_ref,
-             FORWARD_LENGTH_HALF, 0, 0);
-    break;
-  case stop:
-    ad.reset(param.j_max, param.a_max, param.v_max, cur_vel, 0,
-             FORWARD_LENGTH_HALF, 0, 0);
-    break;
-  case forward:
-    ad.reset(param.j_max, param.a_max, param.v_max, cur_vel, v_ref,
-             FORWARD_LENGTH * static_cast<float>(num_square), 0, 0);
-    break;
-  // case back:
-  //     ad.reset(params->run1.j_max, params->run1.a_max, params->run1.v_max,
-  //     cur_vel, 0, BACK_LENGTH, 0, 0); break;
-  default:
-    break;
+    case start:
+      ad.reset(param.j_max, param.a_max, param.v_max, 0, v_ref,
+               FORWARD_LENGTH_START, 0, 0);
+      break;
+    case start_half:
+      ad.reset(param.j_max, param.a_max, param.v_max, 0, v_ref,
+               FORWARD_LENGTH_HALF, 0, 0);
+      break;
+    case stop:
+      ad.reset(param.j_max, param.a_max, param.v_max, cur_vel, 0,
+               FORWARD_LENGTH_HALF, 0, 0);
+      break;
+    case forward:
+      ad.reset(param.j_max, param.a_max, param.v_max, cur_vel, v_ref,
+               FORWARD_LENGTH * static_cast<float>(num_square), 0, 0);
+      break;
+    // case back:
+    //     ad.reset(params->run1.j_max, params->run1.a_max, params->run1.v_max,
+    //     cur_vel, 0, BACK_LENGTH, 0, 0); break;
+    default:
+      break;
   }
   t_end = ad.t_end();
 }
@@ -161,8 +161,7 @@ void Acceleration::UpdateRef() {
       flag_time = true;
     }
   }
-  if (t > t_end)
-    flag_trj = true;
+  if (t > t_end) flag_trj = true;
 }
 
 // OfflineTrajectoryBase
@@ -200,4 +199,4 @@ void M_sequence::UpdateRef() {
     flag = true;
   }
 }
-} // namespace trajectory
+}  // namespace trajectory

@@ -4,25 +4,20 @@
  */
 
 #include "hardware/motor.h"
+
 #include "filter/lowpass_filter.h"
 
 namespace hardware {
-void Motor::StartDMA() { HAL_ADC_Start_DMA(&hadc2, (uint32_t *)dma_data, 3); }
+void Motor::StartDMA() { HAL_ADC_Start_DMA(&hadc2, (uint32_t*)dma_data, 3); }
 
 void Motor::BatteryCheck() {
   UpdateBatteryVoltage();
-  if (battery_voltage > 8.2f)
-    led.OnFrontLeft3();
-  if (battery_voltage > 7.8f)
-    led.OnFrontLeft2();
-  if (battery_voltage > 7.6f)
-    led.OnFrontLeft1();
-  if (battery_voltage > 7.4f)
-    led.OnFrontRight1();
-  if (battery_voltage > 7.2f)
-    led.OnFrontRight2();
-  if (battery_voltage > 7.0f)
-    led.OnFrontRight3();
+  if (battery_voltage > 8.2f) led.OnFrontLeft3();
+  if (battery_voltage > 7.8f) led.OnFrontLeft2();
+  if (battery_voltage > 7.6f) led.OnFrontLeft1();
+  if (battery_voltage > 7.4f) led.OnFrontRight1();
+  if (battery_voltage > 7.2f) led.OnFrontRight2();
+  if (battery_voltage > 7.0f) led.OnFrontRight3();
   printf("battery: %.2f [V]\n", battery_voltage);
 }
 
@@ -139,4 +134,4 @@ void Motor::printLog() {
   printf("%.3f, %.3f, %.3f, %d, %d\n", battery_voltage, current_left,
          current_right, duty_left, duty_right);
 }
-} // namespace hardware
+}  // namespace hardware

@@ -10,7 +10,7 @@
 
 namespace hardware {
 class Encoder {
-public:
+ public:
   Encoder(float sampling_period);
 
   void Update();
@@ -24,18 +24,18 @@ public:
   float GetVelocity();
   float GetPosition();
 
-private:
+ private:
   const float gear_ratio = 11.0f / 43.0f;
-  float sampling_period;                   // [s]
-  const float tire_radius = 12.0f;         // [mm]
-  const float tire_radius_l = tire_radius; // [mm]
-  const float tire_radius_r = tire_radius; // [mm]
+  float sampling_period;                    // [s]
+  const float tire_radius = 12.0f;          // [mm]
+  const float tire_radius_l = tire_radius;  // [mm]
+  const float tire_radius_r = tire_radius;  // [mm]
   const float ppr = 1024.0f;
   float coeff_pulse2angle;
   float coeff_pulse2vel;
   int16_t pulse_left;
   int16_t pulse_right;
 };
-} // namespace hardware
+}  // namespace hardware
 
-#endif // HARDWARE_ENCODER_HPP_
+#endif  // HARDWARE_ENCODER_HPP_
