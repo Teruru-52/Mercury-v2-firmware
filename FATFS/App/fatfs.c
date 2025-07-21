@@ -57,12 +57,12 @@ void SdioTest() {
 
   /*##-1- Link the SD disk I/O driver ########################################*/
   if (retSD == 0) {
-    Write_GPIO(LED_FRONT_LEFT3, GPIO_PIN_SET);
+    // Write_GPIO(LED_FRONT_LEFT3, GPIO_PIN_SET);
     /*##-2- Register the file system object to the FatFs module ##############*/
     if (f_mount(&SDFatFS, (TCHAR const *)SDPath, 0) != FR_OK) {
       Error_Handler();
     } else {
-      Write_GPIO(LED_FRONT_LEFT2, GPIO_PIN_SET);
+      // Write_GPIO(LED_FRONT_LEFT2, GPIO_PIN_SET);
       /*##-3- Create a FAT file system (format) on the logical drive #########*/
       FRESULT fr =
           f_mkfs((TCHAR const *)SDPath, FM_ANY, 0, rtext, sizeof(rtext));
@@ -75,23 +75,23 @@ void SdioTest() {
         }
         Error_Handler();
       } else {
-        Write_GPIO(LED_FRONT_LEFT1, GPIO_PIN_SET);
+        // Write_GPIO(LED_FRONT_LEFT1, GPIO_PIN_SET);
         /*##-4- Create and Open a new text file object with write access #####*/
         if (f_open(&SDFile, "STM32.txt", FA_CREATE_ALWAYS | FA_WRITE) !=
             FR_OK) {
           Error_Handler();
         } else {
-          Write_GPIO(LED_FRONT_RIGHT1, GPIO_PIN_SET);
+          // Write_GPIO(LED_FRONT_RIGHT1, GPIO_PIN_SET);
           /*##-5- Write data to the text file ################################*/
           res = f_write(&SDFile, wtext, sizeof(wtext), (void *)&byteswritten);
 
           if ((byteswritten == 0) || (res != FR_OK)) {
             Error_Handler();
           } else {
-            Write_GPIO(LED_FRONT_RIGHT2, GPIO_PIN_SET);
+            // Write_GPIO(LED_FRONT_RIGHT2, GPIO_PIN_SET);
             /*##-6- Close the open text file #################################*/
             f_close(&SDFile);
-            Write_GPIO(LED_FRONT_RIGHT3, GPIO_PIN_SET);
+            // Write_GPIO(LED_FRONT_RIGHT3, GPIO_PIN_SET);
             /*##-7- Open the text file object with read access ###############*/
             if (f_open(&SDFile, "STM32.txt", FA_READ) != FR_OK) {
               Error_Handler();
