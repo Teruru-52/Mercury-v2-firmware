@@ -31,21 +31,22 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <math.h>
 #include "arm_math.h"
+#include "sdio.h"
+#include <math.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 // #include "cmsis_os.h"
 #include "adc.h"
 // #include "fatfs.h"
-#include "sdio.h"
+#include "gpio.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "gpio.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -85,20 +86,18 @@ void Error_Handler(void);
 #define LED5_GPIO_Port GPIOB
 #define LED6_Pin GPIO_PIN_11
 #define LED6_GPIO_Port GPIOB
-#define SW_Pin GPIO_PIN_12
-#define SW_GPIO_Port GPIOB
-#define MOTOR_FAN_PH_Pin GPIO_PIN_13
-#define MOTOR_FAN_PH_GPIO_Port GPIOB
-#define SDIO_SW_Pin GPIO_PIN_10
-#define SDIO_SW_GPIO_Port GPIOA
-#define LED7_Pin GPIO_PIN_11
-#define LED7_GPIO_Port GPIOA
-#define LED8_Pin GPIO_PIN_12
-#define LED8_GPIO_Port GPIOA
-#define LED9_Pin GPIO_PIN_15
+#define LED7_Pin GPIO_PIN_12
+#define LED7_GPIO_Port GPIOB
+#define LED8_Pin GPIO_PIN_13
+#define LED8_GPIO_Port GPIOB
+#define LED9_Pin GPIO_PIN_10
 #define LED9_GPIO_Port GPIOA
-#define LED10_Pin GPIO_PIN_3
-#define LED10_GPIO_Port GPIOB
+#define LED10_Pin GPIO_PIN_11
+#define LED10_GPIO_Port GPIOA
+#define SDIO_SW_Pin GPIO_PIN_15
+#define SDIO_SW_GPIO_Port GPIOA
+#define SW_Pin GPIO_PIN_3
+#define SW_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
