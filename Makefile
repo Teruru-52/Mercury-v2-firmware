@@ -83,13 +83,6 @@ Middlewares/Third_Party/FatFs/src/option/syscall.c \
 Core/Src/dma.c \
 Core/Src/stm32f4xx_hal_timebase_tim.c
 
-# CPP sources
-CPP_SOURCES = \
-$(wildcard */Src/*.cpp) \
-$(wildcard */Src/*/*.cpp) \
-$(wildcard MazeSolver2015/*.cpp) \
-# $(shell find **/Src -name "*.cpp*") \
-
 # ASM sources
 ASM_SOURCES =  \
 startup_stm32f405xx.s
@@ -103,13 +96,11 @@ PREFIX = arm-none-eabi-
 # either it can be added to the PATH environment variable.
 ifdef GCC_PATH
 CC = $(GCC_PATH)/$(PREFIX)gcc
-CXX = $(GCC_PATH)/$(PREFIX)g++
 AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
 CP = $(GCC_PATH)/$(PREFIX)objcopy
 SZ = $(GCC_PATH)/$(PREFIX)size
 else
 CC = $(PREFIX)gcc
-CXX = $(PREFIX)g++
 AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy
 SZ = $(PREFIX)size
@@ -145,8 +136,6 @@ C_DEFS =  \
 -D'__packed=__attribute__((__packed__))' \
 -DUSE_ARM_GCC
 
-CPP_DEFS = $(C_DEFS)
-
 # AS includes
 AS_INCLUDES =  \
 -ICore/Inc
@@ -164,30 +153,19 @@ C_INCLUDES =  \
 -IFATFS/Target \
 -IFATFS/App \
 -IMiddlewares/Third_Party/FatFs/src \
--IApplication/Inc \
--IApplication/Inc/hardware \
--IMazeSolver2015 \
--Imicromouse-control-module/include/ctrl \
--IDrivers/CMSIS/DSP/Include
-
-# C++ includes
-CPP_INCLUDES = $(C_INCLUDES)
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CPPFLAGS = $(MCU) $(CPP_DEFS) $(CPP_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
-CPPFLAGS += -g -gdwarf-2
 endif
 
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
-CPPFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 #######################################
 # LDFLAGS
@@ -196,14 +174,11 @@ CPPFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32F405RGTx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys -lstdc++
-LIBS += -larm_cortexM4lf_math
+LIBS = -lc -lm -lnosys -larm_cortexM4lf_math
 LIBDIR = -L Drivers/CMSIS/Lib/GCC 
-# LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
-LDFLAGS = $(MCU) -specs=rdimon.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
+LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
-
 
 #######################################
 # build the application
@@ -211,24 +186,96 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
-# list of c++ objects
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
-vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+#######################################
+#######################################
+######## ↓ additional rules ↓ #########
+#######################################
+#######################################
+
+#######################################
+# CXX resources
+#######################################
+CXX_DEFS = $(C_DEFS)
+CXXFLAGS = $(MCU) $(CXX_DEFS) $(CXX_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+
+CXX_HEADERS = \
+$(shell find Application/Inc -name "*.h") \
+$(shell find MazeSolver2015 -name "*.h") \
+$(shell find micromouse-control-module/include -name "*.h") \
+
+CXX_SOURCES = \
+$(wildcard */Src/*.cpp) \
+$(wildcard */Src/*/*.cpp) \
+$(wildcard MazeSolver2015/*.cpp) \
+# $(shell find Application/Src -name "*.cpp*") \
+# $(shell find Application/Src/* -name "*.cpp*") \
+# $(shell find MazeSolver2015 -name "*.cpp*") \
+
+C_INCLUDES += \
+-IApplication/Inc \
+-IApplication/Inc/hardware \
+-IMazeSolver2015 \
+-Imicromouse-control-module/include/ctrl \
+-IDrivers/CMSIS/DSP/Include
+
+CXX_INCLUDES = $(C_INCLUDES)
+
+ifdef GCC_PATH
+CXX = $(GCC_PATH)/$(PREFIX)g++
+else
+CXX = $(PREFIX)g++
+endif
+
+#######################################
+# additional flags
+#######################################
+LIBS += -lstdc++
+LDFLAGS += -Wl,--print-memory-usage --specs=nosys.specs -Wl,--wrap=__assert_func -u _printf_float
+
+#######################################
+# formatting
+#######################################
+CLANG_FORMAT_VERSION := $(shell clang-format --version 2>/dev/null | grep -o -E 'version [0-9]+' | grep -o -E '[0-9]+')
+
+ifeq ($(CLANG_FORMAT_VERSION),18)
+    FORMAT := clang-format
+else ifneq ($(shell command -v clang-format-18 2>/dev/null),)
+    FORMAT := clang-format-18
+else
+    $(warning "clang-format 18 not found. Please install clang-format 18")
+endif
+
+.PHONY: format test-format
+format:
+	$(FORMAT) -i $(CXX_HEADERS) $(CXX_SOURCES)
+
+test-format:
+	$(FORMAT) --dry-run -Werror -i $(CXX_HEADERS) $(CXX_SOURCES)
+
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(CXX_SOURCES:.cpp=.o)))
+vpath %.cpp $(sort $(dir $(CXX_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CXX) -c $(CPPFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+	$(CXX) -c $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+
+#######################################
+#######################################
+######## ↑ additional rules ↑ #########
+#######################################
+#######################################
+
+$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
