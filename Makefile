@@ -190,7 +190,7 @@ LDSCRIPT = STM32F405RGTx_FLASH.ld
 # libraries
 LIBS = -lc -lm -lnosys -larm_cortexM4lf_math
 LIBDIR = -L Drivers/CMSIS/Lib/GCC 
-LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) -specs=nano.specs --specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
@@ -203,6 +203,8 @@ vpath %.c $(sort $(dir $(C_SOURCES)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASMM_SOURCES:.S=.o)))
+vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 
 #######################################
 #######################################
@@ -222,12 +224,8 @@ $(shell find MazeSolver2015 -name "*.h") \
 $(shell find micromouse-control-module/include -name "*.h") \
 
 CXX_SOURCES = \
-$(wildcard */Src/*.cpp) \
-$(wildcard */Src/*/*.cpp) \
-$(wildcard MazeSolver2015/*.cpp) \
-# $(shell find Application/Src -name "*.cpp*") \
-# $(shell find Application/Src/* -name "*.cpp*") \
-# $(shell find MazeSolver2015 -name "*.cpp*") \
+$(shell find Application/Src -name "*.cpp") \
+$(shell find MazeSolver2015 -path "MazeSolver2015/test" -prune -o -name "*.cpp" -print) \
 
 C_INCLUDES += \
 -IApplication/Inc \
@@ -236,7 +234,9 @@ C_INCLUDES += \
 -Imicromouse-control-module/include/ctrl \
 -IDrivers/CMSIS/DSP/Include
 
-CXX_INCLUDES = $(C_INCLUDES)
+CXX_INCLUDES = \
+$(C_INCLUDES) \
+$(patsubst %, -I%, $(shell find Application -type d -name Inc))
 
 ifdef GCC_PATH
 CXX = $(GCC_PATH)/$(PREFIX)g++
@@ -248,7 +248,7 @@ endif
 # additional flags
 #######################################
 LIBS += -lstdc++
-LDFLAGS += -Wl,--print-memory-usage --specs=nosys.specs -Wl,--wrap=__assert_func -u _printf_float
+LDFLAGS += -Wl,--print-memory-usage
 
 #######################################
 # formatting
@@ -270,10 +270,31 @@ format:
 test-format:
 	$(FORMAT) --dry-run -Werror -i $(CXX_HEADERS) $(CXX_SOURCES)
 
+#######################################
+# tidy
+#######################################
+CLANG_TIDY_VERSION := $(shell clang-tidy --version 2>/dev/null | grep -o -E 'version [0-9]+' | grep -o -E '[0-9]+')
+
+ifeq ($(CLANG_TIDY_VERSION),18)
+    TIDY := clang-tidy
+else ifneq ($(shell command -v clang-tidy-18 2>/dev/null),)
+    TIDY := clang-tidy-18
+else
+    $(warning "clang-tidy 18 not found. Please install clang-tidy 18")
+endif
+
+.PHONY: tidy test-tidy
+tidy:
+	$(TIDY) --fix-errors $(CXX_HEADERS) $(CXX_SOURCES) -- $(CXXFLAGS) --target=arm-none-eabi
+
+test-tidy:
+	$(TIDY) $(CXX_HEADERS) $(CXX_SOURCES) -- $(CXXFLAGS) --target=arm-none-eabi
+
+
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(CXX_SOURCES:.cpp=.o)))
 vpath %.cpp $(sort $(dir $(CXX_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR)
 	$(CXX) -c $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 
 #######################################

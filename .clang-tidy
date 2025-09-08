@@ -1,0 +1,18 @@
+---
+Checks:          'google-*,clang-diagnostic-*,clang-analyzer-*,readability-identifier-naming'
+WarningsAsErrors: ''
+FormatStyle:     google
+ExtraArgs:
+ - '-std=c++17'
+ - '-I/usr/include/c++/11'
+ - '-I/usr/include/x86_64-linux-gnu/c++/11'
+ - '-I/usr/include/c++/11/backward'
+ - '-I/usr/lib/gcc/x86_64-linux-gnu/11/include'
+ - '-I/usr/local/include'
+ - '-I/usr/include/x86_64-linux-gnu'
+ - '-I/usr/include'
+
+CheckOptions:
+  - key:             readability-identifier-naming.FunctionCase
+    value:           CamelCase
+...
