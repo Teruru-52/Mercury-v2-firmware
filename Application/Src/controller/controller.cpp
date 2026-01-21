@@ -766,8 +766,8 @@ void Controller::LoggerWall() {
 }
 
 void Controller::OutputLog() {
-  // odom->OutputLog();
-  motor.printLog();
+  odom->OutputLog();
+  // motor.printLog();
 }
 
 void Controller::OutputSlalomLog() {

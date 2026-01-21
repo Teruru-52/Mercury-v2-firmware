@@ -28,9 +28,24 @@ const float ir_start_base = 3200;
 // const float ir_slalom = 2450; // front wall correction (slalom)
 
 // science tokyo
+// const float ir_fl1_wall = 2150;
+// const float ir_fl2_wall = 2300;
+// const float ir_fl3_wall = 2300;
+// const float ir_fr1_wall = 2400;
+// const float ir_fr2_wall = 2400;
+// const float ir_fr3_wall = 2350;
+// const float ir_fl1_base = 2220;
+// const float ir_fl2_base = 2800;
+// const float ir_fl3_base = 3200;
+// const float ir_fr1_base = 3650;
+// const float ir_fr2_base = 3050;
+// const float ir_fr3_base = 2900;
+// const float ir_slalom = 2420;  // front wall correction (slalom)
+
+// Contest
 const float ir_fl1_wall = 2150;
-const float ir_fl2_wall = 2300;
-const float ir_fl3_wall = 2300;
+const float ir_fl2_wall = 2500;
+const float ir_fl3_wall = 2320;
 const float ir_fr1_wall = 2200;
 const float ir_fr2_wall = 2800;
 const float ir_fr3_wall = 2400;
@@ -39,23 +54,8 @@ const float ir_fl2_base = 2800;
 const float ir_fl3_base = 3200;
 const float ir_fr1_base = 3650;
 const float ir_fr2_base = 3050;
-const float ir_fr3_base = 2900;
-const float ir_slalom = 2420;  // front wall correction (slalom)
-
-// Contest
-// const float ir_fl1_wall = 2150;
-// const float ir_fl2_wall = 2500;
-// const float ir_fl3_wall = 2300;
-// const float ir_fr1_wall = 2200;
-// const float ir_fr2_wall = 2800;
-// const float ir_fr3_wall = 2300;
-// const float ir_fl1_base = 2220;
-// const float ir_fl2_base = 2800;
-// const float ir_fl3_base = 3150;
-// const float ir_fr1_base = 3650;
-// const float ir_fr2_base = 3050;
-// const float ir_fr3_base = 3000;
-// const float ir_slalom = 2400; // front wall correction (slalom)
+const float ir_fr3_base = 2950;
+const float ir_slalom = 2400;  // front wall correction (slalom)
 
 hardware::IR_Value ir_value;
 // for wall judgement
@@ -106,15 +106,18 @@ trajectory::Velocity velocity = {
     .v1 = 2.5e+2f, .v2 = 3.0e+2f, .v3 = 3.5e+2f, .v4 = 5.0e+2f, .v5 = 6.5e+2f};
 
 trajectory::Parameter acc_param1 = {
-    .v_max = 2.5e+2f, .a_max = 1.0e+4f, .j_max = 0.5e+5f};
+    .v_max = 1.0e+2f, .a_max = 1.0e+4f, .j_max = 0.5e+5f};
 trajectory::Parameter acc_param2 = {
-    .v_max = 3.0e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
+    .v_max = 1.5e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
 trajectory::Parameter acc_param3 = {
-    .v_max = 3.5e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
+    .v_max = 2.0e+2f, .a_max = 1.5e+4f, .j_max = 2.0e+5f};
 trajectory::Parameter acc_param4 = {
     .v_max = 5.0e+2f, .a_max = 2.0e+4f, .j_max = 3.0e+5f};
+// trajectory::Parameter acc_param5 = {
+//     .v_max = 6.5e+2f, .a_max = 3.0e+4f, .j_max = 6.0e+5f};
 trajectory::Parameter acc_param5 = {
-    .v_max = 6.5e+2f, .a_max = 3.0e+4f, .j_max = 6.0e+5f};
+    .v_max = 1.5e+2f, .a_max = 1.0e+4f, .j_max = 0.5e+5f};
+
 trajectory::Parameters acc_params = {.run1 = acc_param1,
                                      .run2 = acc_param2,
                                      .run3 = acc_param3,

@@ -40,9 +40,9 @@ void StartupProcess() {
   controller.BatteryCheck();
   HAL_Delay(500);
 
-  __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 1000);
-  HAL_Delay(1000);
-  __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 0);
+  // __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 1000);
+  // HAL_Delay(1000);
+  // __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 0);
 
   led.OffAll();
 }
@@ -75,6 +75,15 @@ void Initialize() {
   switch (state.func_) {
     case State::func0:  // start first searching (not load maze,
                         // SEARCHING_NOT_GOAL)
+      trj_mode = 1;
+      controller.SetTrajectoryMode(trj_mode);
+      search_time = 120;
+      state.mode_ = State::search;
+      // printf("mode: search0\n");
+      break;
+
+    case State::func1:  // start first searching (not load maze,
+                        // SEARCHING_NOT_GOAL)
       trj_mode = 2;
       controller.SetTrajectoryMode(trj_mode);
       search_time = 120;
@@ -82,17 +91,17 @@ void Initialize() {
       // printf("mode: search0\n");
       break;
 
-    case State::func1:  // resume searching (load maze, SEARCHING_NOT_GOAL)
-      trj_mode = 1;
+    case State::func2:  // resume searching (load maze, SEARCHING_NOT_GOAL)
+      trj_mode = 3;
       controller.SetTrajectoryMode(trj_mode);
       search_time = 120;
       state.mode_ = State::search;
       // printf("mode: search1\n");
       break;
 
-    case State::func2:  // resume searching (load maze, SEARCHING_REACHED_GOAL
+    case State::func3:  // resume searching (load maze, SEARCHING_REACHED_GOAL
                         // or BACK_TO_START or FINISHED)
-      trj_mode = 2;
+      trj_mode = 1;
       controller.SetTrajectoryMode(trj_mode);
       LoadMaze();
       agent.resumeAt(Agent::SEARCHING_NOT_GOAL, maze);
@@ -101,7 +110,7 @@ void Initialize() {
       // printf("mode: search2\n");
       break;
 
-    case State::func3:  // run sequence (load maze, SEARCHING_REACHED_GOAL or
+    case State::func4:  // run sequence (load maze, SEARCHING_REACHED_GOAL or
                         // BACK_TO_START or FINISHED)
       trj_mode = 2;
       controller.SetTrajectoryMode(trj_mode);
@@ -113,7 +122,7 @@ void Initialize() {
       // printf("mode: run_sequence1\n");
       break;
 
-    case State::func4:  // run sequence (load maze, SEARCHING_REACHED_GOAL or
+    case State::func5:  // run sequence (load maze, SEARCHING_REACHED_GOAL or
                         // BACK_TO_START or FINISHED)
       trj_mode = 4;
       controller.SetTrajectoryMode(trj_mode);
@@ -125,18 +134,19 @@ void Initialize() {
       // printf("mode: run_sequence2\n");
       break;
 
-    case State::func5:  // run sequence (load maze, SEARCHING_REACHED_GOAL or
-                        // BACK_TO_START or FINISHED)
-      // __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 2000);
-      trj_mode = 5;
-      controller.SetTrajectoryMode(trj_mode);
-      LoadMaze();
-      agent.resumeAt(Agent::FINISHED, maze);
-      // search_time = 10;
-      agent.caclRunSequence(false);
-      state.mode_ = State::run_sequence;
-      // printf("mode: run_sequence3\n");
-      break;
+      // case State::func5:  // run sequence (load maze, SEARCHING_REACHED_GOAL
+      // or
+      //                     // BACK_TO_START or FINISHED)
+      //   // __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 2000);
+      //   trj_mode = 5;
+      //   controller.SetTrajectoryMode(trj_mode);
+      //   LoadMaze();
+      //   agent.resumeAt(Agent::FINISHED, maze);
+      //   // search_time = 10;
+      //   agent.caclRunSequence(false);
+      //   state.mode_ = State::run_sequence;
+      //   // printf("mode: run_sequence3\n");
+      //   break;
 
     case State::func6:
       state.mode_ = State::m_identification;
@@ -472,9 +482,9 @@ void MazeSearch() {
     } else if (prevState == Agent::SEARCHING_NOT_GOAL &&
                agent.getState() == Agent::SEARCHING_REACHED_GOAL) {
       maze_backup = maze;
-      // state.interruption_ = State::not_interrupt;
-      // FlashMaze();
-      // state.interruption_ = State::interrupt;
+      state.interruption_ = State::not_interrupt;
+      FlashMaze();
+      state.interruption_ = State::interrupt;
     } else if (cnt1Hz > search_time &&
                agent.getState() == Agent::SEARCHING_REACHED_GOAL) {
       agent.forceGotoStart();
@@ -539,9 +549,11 @@ void LoadMaze() {
 }
 
 void PrintLog() {
-  if (state.mode_ == State::test_ir) ir_sensors.PrintLog();
-  // printf("cur_pos.x = %.3f\n",
-  //        controller.GetFrontWallPos((ir_value.fl3 + ir_value.fr3) * 0.5));
-  else if (state.mode_ == State::test_odometory)
+  if (state.mode_ == State::test_ir) {
+    ir_sensors.PrintLog();
+    controller.OutputLog();
+    // printf("cur_pos.x = %.3f\n",
+    //        controller.GetFrontWallPos((ir_value.fl3 + ir_value.fr3) * 0.5f));
+  } else if (state.mode_ == State::test_odometory)
     controller.OutputLog();
 }
